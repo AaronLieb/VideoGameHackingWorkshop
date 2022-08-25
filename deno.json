@@ -1,0 +1,28 @@
+{
+    "compilerOptions": {},
+    "lint": {
+        "files": {
+            "include": [],
+            "exclude": []
+        }
+    },
+    "fmt": {
+        "files": {
+            "include": [],
+            "exclude": []
+        },
+        "options": {
+            "useTabs": false,
+            "lineWidth": 120,
+            "indentWidth": 4,
+            "singleQuote": false,
+            "proseWrap": "preserve"
+        }
+    },
+    "test": {
+        "files": {
+            "include": [],
+            "exclude": []
+        }
+    }
+}
