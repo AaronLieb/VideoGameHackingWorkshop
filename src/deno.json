@@ -1,5 +1,5 @@
 {
-    "compilerOptions": {},
+  "compilerOptions": {},
     "lint": {
         "files": {
             "include": [],
