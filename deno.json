@@ -29,5 +29,8 @@
             "include": [],
             "exclude": []
         }
-    }
+    },
+    "generateValidator": [
+        "src/common/types.ts"
+    ]
 }
