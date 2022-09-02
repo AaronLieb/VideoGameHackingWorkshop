@@ -46,12 +46,12 @@ async function generate(sourceFile) {
 		${out}
 	`;
 
-    const tmp = Deno.makeTempFileSync({
+    const tmp = await Deno.makeTempFile({
         dir: "./",
         prefix: ".~generate_validator-",
         suffix: ".ts",
     });
-    Deno.writeTextFileSync(tmp, file);
+    await Deno.writeTextFile(tmp, file);
 
     try {
         await execute.exec(["deno", "fmt", tmp]);
