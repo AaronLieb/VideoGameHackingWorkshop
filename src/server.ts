@@ -1,4 +1,4 @@
-import { server } from "./deps.ts";
+import { server } from "/src/deps.ts";
 
 const port = 80;
 

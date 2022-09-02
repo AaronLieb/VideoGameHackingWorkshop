@@ -1,5 +1,6 @@
 {
-  "compilerOptions": {},
+    "compilerOptions": {},
+    "importMap": "import_map.json",
     "lint": {
         "files": {
             "include": [],
