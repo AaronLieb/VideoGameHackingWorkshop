@@ -174,33 +174,50 @@ class validator {
             case "union": {
                 const types = [];
                 tsType.union.forEach((typ) => {
-                    if (typ.typeRef.typeParams) {
-                        throw "typeParams not supported for union";
-                    }
+                    switch (typ.kind) {
+                        case "typeRef": {
+                            if (typ.typeRef.typeParams) {
+                                throw "typeParams not supported for union";
+                            }
 
-                    const actual = this.types.get(typ.typeRef.typeName);
-                    if (actual) {
-                        types.push(actual);
+                            const actual = this.types.get(typ.typeRef.typeName);
+                            if (!actual) {
+                                throw `unknown type alias ${typ.typeRef.typeName}`;
+                            }
+
+                            if (actual.kind != "typeAlias") return;
+                            if (actual.declarationKind != "export") return;
+                            if (actual.typeAliasDef.tsType.kind != "typeLiteral") return;
+
+                            types.push({
+                                name: actual.name,
+                                tsType: actual.typeAliasDef.tsType,
+                            });
+                            break;
+                        }
+                        case "typeLiteral": {
+                            types.push({
+                                name: null,
+                                tsType: typ,
+                            });
+                            break;
+                        }
                     }
                 });
 
                 // fields maps name. It should only keep track of properties of
                 // type literal.
                 const fields = new Map();
-                types.forEach((typ) => {
-                    if (typ.kind != "typeAlias") return;
-                    if (typ.declarationKind != "export") return;
-                    if (typ.typeAliasDef.tsType.kind != "typeLiteral") return;
-
+                types.forEach(({ name, tsType }) => {
                     // This is not recursive, which is fine. It would be nice,
                     // but we don't need it.
-                    const props = typ.typeAliasDef.tsType.typeLiteral.properties;
+                    const props = tsType.typeLiteral.properties;
                     props.forEach((prop) => {
                         if (prop.tsType.kind != "literal") return;
                         if (prop.tsType.literal.kind != "string") return;
 
                         const v = {
-                            type: typ.name,
+                            type: name,
                             literal: prop.tsType.literal.string,
                         };
 
@@ -224,7 +241,7 @@ class validator {
 
                 switch (unionFields.size) {
                     case 0:
-                        throw "no literal union field found";
+                        return [];
                     case 1:
                         break;
                     default:
@@ -235,12 +252,14 @@ class validator {
                 const [values] = unionFields.values();
 
                 opts.push(`switch (${dot(prefix, field)}) {`);
-                values.forEach((v) => {
-                    opts.push(`case "${v.literal}": {`);
-                    opts.push(`  Validate${v.type}(v)`);
-                    opts.push(`  break`);
-                    opts.push(`}`);
-                });
+                values
+                    .filter((v) => !!v.type)
+                    .forEach((v) => {
+                        opts.push(`case "${v.literal}": {`);
+                        opts.push(`  Validate${v.type}(v)`);
+                        opts.push(`  break`);
+                        opts.push(`}`);
+                    });
                 opts.push("case undefined: {");
                 opts.push(`  throw new ValidationError("missing ${dot(prefix, field)}")`);
                 opts.push(`}`);
