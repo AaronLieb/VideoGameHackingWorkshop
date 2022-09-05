@@ -1,31 +1,40 @@
-import { Command as WSCommand, Event } from "/src/common/types.ts";
+import { Command, Event } from "/src/common/types.ts";
 import * as validator from "/src/common/types_validator.ts";
 
-export type Command =
-    | WSCommand
-    | { type: "open" }
-    | { type: "close"; code: number };
-
-class handlerSet extends Set<(_: Command) => void> {
-    dispatch(cmd: Command) {
-        for (const handler of this) {
-            handler(cmd);
-        }
+// Fatal describes all fatal errors. Throwing this error causes the Websocket to
+// shut down.
+export class Fatal extends Error {
+    constructor(msg: string, readonly code = 1008) {
+        super(msg);
     }
+}
+
+// CommandHandler describes an object that can handle commands.
+export interface CommandHandler {
+    handleCommand(server: Server, cmd: Command): Promise<void>;
+}
+
+// Upgrade upgrades the given request to a Websocket and dispatches it to the
+// given handler.
+export function Upgrade(r: Request, handler: CommandHandler): Response {
+    const upgrade = Deno.upgradeWebSocket(r);
+    new Server(upgrade.socket, handler);
+    return upgrade.response;
 }
 
 // Server is the Websocket server.
 export class Server {
-    private socket: WebSocket;
-    private handlers = new handlerSet();
+    private readonly socket: WebSocket;
+    private readonly handler: CommandHandler;
 
-    constructor(socket: WebSocket) {
+    constructor(socket: WebSocket, handler: CommandHandler) {
+        this.handler = handler;
         this.socket = socket;
         this.socket.onopen = () => {
-            this.handlers.dispatch({ type: "open" });
+            this.dispatch({ type: "_open" });
         };
         this.socket.onclose = (ev: CloseEvent) => {
-            this.handlers.dispatch({ type: "close", code: ev.code });
+            this.dispatch({ type: "_close", code: ev.code });
         };
         this.socket.onmessage = (ev: MessageEvent) => {
             if (typeof ev.data != "string") {
@@ -49,14 +58,28 @@ export class Server {
                 return;
             }
 
-            try {
-                this.handlers.dispatch(cmd);
-            } catch (err) {
-                console.error(err);
-                this.closeWithError(`${err}`);
+            if (cmd.type.startsWith("_")) {
+                this.closeWithError("illegal command name given", 1002);
                 return;
             }
+
+            this.dispatch(cmd);
         };
+    }
+
+    private dispatch(cmd: Command) {
+        this.handler.handleCommand(this, cmd).catch((err) => {
+            if (err instanceof Fatal) {
+                this.closeWithError(err.message, err.code);
+            } else {
+                this.send({
+                    type: "WARNING",
+                    d: {
+                        message: `${err}`,
+                    },
+                });
+            }
+        });
     }
 
     send(ev: Event) {
@@ -73,9 +96,5 @@ export class Server {
     // https://www.rfc-editor.org/rfc/rfc6455.html#section-7.4.1.
     closeWithError(error?: string, code = 1008) {
         this.socket.close(code, error);
-    }
-
-    addHandler(handler: (cmd: Command) => void) {
-        this.handlers.add(handler);
     }
 }
