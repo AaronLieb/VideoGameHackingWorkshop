@@ -37,6 +37,7 @@ const metadata = {
             },
         },
     ],
+    blockMods: {},
     attributes: {
         n_jumps: 3,
     },

@@ -49,7 +49,7 @@ export type RawMap = string;
 export type MapMetadata = {
     blocks: Record<Block, MapObjectID>;
     entities: Record<Block, MapObjectID>;
-    blockMods?: Record<Block, BlockModifier[]>;
+    blockMods: Record<Block, BlockModifier[]>;
     goals: MapGoal[];
     attributes: Record<string, unknown>;
 };
