@@ -88,7 +88,9 @@ export type Event =
     | WarningEvent
     | MapDataEvent
     | VictoryEvent
-    | CorrectionEvent;
+    | CorrectionEvent
+    | { type: "_open" }
+    | { type: "_close"; code: number };
 
 // HelloEvent is the first ever event coming from the server. Contains all the
 // data needed.

@@ -15,7 +15,7 @@ export class Session {
         this.username = username;
     }
 
-    async handleCommand(server: ws.Server, cmd: Command) {
+    handleCommand(server: ws.Server, cmd: Command) {
         switch (cmd.type) {
             case "_open": {
                 server.send({
@@ -25,6 +25,13 @@ export class Session {
                         completedLevels: [],
                     },
                 });
+                break;
+            }
+            case "_close": {
+                if (this.currentLevel) {
+                    this.currentLevel.destroy();
+                    this.currentLevel = undefined;
+                }
                 break;
             }
             case "JOIN": {
@@ -38,7 +45,7 @@ export class Session {
                     throw `unknown level ${cmd.d.level}`;
                 }
 
-                const level = await newLevel(this);
+                const level = newLevel(this);
                 this.currentLevel = level;
 
                 server.send({
