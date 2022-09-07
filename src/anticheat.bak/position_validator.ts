@@ -3,7 +3,7 @@ import * as map from "/src/common/map.ts";
 import * as level from "/src/level.ts";
 import { Block, Command, Position, Velocity } from "/src/common/types.ts";
 
-export function AllowedMapBlocks(map: map.Data): Block[] {
+export function AllowedMapBlocks(map: map.Map): Block[] {
     const airBlocks: Block[] = [];
 
     const check = (block: Block) => {
@@ -32,6 +32,7 @@ export class PositionValidator {
     readonly allowedBlocks: Set<Block>;
 
     private violations = 0;
+    // TODO: move this out
     private lastPositions: Position[] = [];
     private timeoutHandle: number | null = null;
 

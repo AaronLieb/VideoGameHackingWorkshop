@@ -8,12 +8,13 @@ const store = sqlite.New(Deno.env.get("VGHW_DB") || "/tmp/vghw-dev.db");
 
 const handler = async (request: Request): Promise<Response> => {
     const url = new URL(request.url);
-    if (url.pathname == "/") {
-        url.pathname = "/public/";
-    }
 
     switch (url.pathname) {
         case "/api/ws": {
+            if (request.method != "GET") {
+                return http.RespondStatus(http.Status.MethodNotAllowed);
+            }
+
             const cookies = http.getCookies(request.headers);
             if (!cookies["VGHW-Username"]) {
                 return http.RespondStatus(http.Status.Unauthorized);
@@ -32,28 +33,49 @@ const handler = async (request: Request): Promise<Response> => {
                 return http.RespondStatus(http.Status.OK);
             }
 
-            const form = await request.formData();
+            switch (request.method) {
+                case "GET":
+                    return http.RespondStatus(http.Status.Unauthorized);
+                case "POST":
+                    break; // do below
+                default:
+                    return http.RespondStatus(http.Status.MethodNotAllowed);
+            }
+
+            let form;
+            try {
+                form = await request.formData();
+            } catch (err) {
+                return http.Respond(`${err}`, http.Status.BadRequest);
+            }
+
             const username = form.get("username");
             if (!username) {
                 return http.Respond("missing username in form", http.Status.BadRequest);
             }
 
-            const response = http.RespondStatus(http.Status.OK);
-            http.setCookie(response.headers, {
+            const headers = new Headers();
+            http.setCookie(headers, {
                 name: "VGHW-Username",
                 value: username.toString(),
                 path: "/",
             });
 
-            return response;
+            return http.Redirect(`${url.protocol}//${url.host}`, http.Status.Found, {
+                headers: headers,
+            });
         }
         default: {
+            if (url.pathname.startsWith("/public")) {
+                url.pathname = url.pathname.replace("/public", "");
+            }
+
             if (url.pathname.endsWith("/")) {
                 url.pathname += "index.html";
             }
 
             return http
-                .serveFile(request, "." + url.pathname)
+                .serveFile(request, "./public" + url.pathname)
                 .catch((_: Deno.errors.NotFound) => http.RespondStatus(404));
         }
     }

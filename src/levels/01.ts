@@ -1,52 +1,14 @@
+import { Position } from "/src/common/types.ts";
+import * as level1 from "/src/common/levels/01.ts";
+import * as entity from "/src/common/entity.ts";
 import * as level from "/src/level.ts";
-import * as map from "/src/common/map.ts";
 
-const rawMap = `
-                                  LLLL
-                                LLLLLLLL
-                                LLLLLLLLL
-                                  LLLLL
-                                   WW
-                                   WW
-        P                          WW
-==================================================================
-..................................................................
-..................................................................
-..................................................................`;
-
-const metadata = {
-    blocks: {
-        background: "air.png",
-        "L": "leaf.png",
-        "W": "wood.png",
-        "=": "ground.png",
-        ".": "dirt.png",
-    },
-    entities: {
-        P: "player_spawn",
-    },
-    goals: [
-        {
-            from: {
-                x: 65,
-                y: 0,
-            },
-            to: {
-                x: 66,
-                y: 13,
-            },
-        },
-    ],
-    blockMods: {},
-    attributes: {
-        n_jumps: 3,
-    },
-};
-
-const levelMap = new map.Data(rawMap, metadata);
+export * from "/src/common/levels/01.ts";
 
 export class Level extends level.Level {
     constructor(s: level.Session) {
-        super(s, levelMap, 1);
+        super(s, level1.Map, 1);
+        this.initializeEntity("P", (pos: Position) => new entity.Player("P", pos));
+        this.initializeEntity("B", (pos: Position) => new entity.Entity("B", pos));
     }
 }

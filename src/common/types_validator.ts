@@ -3,78 +3,50 @@
 // deno-lint-ignore-file
 import * as t from "./types.ts";
 
-// ValidationError is thrown on every error returned by ValidateX
+// ValidationError is thrown on every error returned by validateX
 // functions.
 export class ValidationError extends Error {}
 
-// ValidatePosition validates the needed type constraints
-// from v and cast it to Position.
-export function ValidatePosition(v: any): t.Position {
+// validateVector validates the needed type constraints
+// from v and cast it to Vector.
+export function validateVector(v: any): t.Vector {
     if (typeof v.x !== "number") throw new ValidationError("missing v.x");
     if (typeof v.y !== "number") throw new ValidationError("missing v.y");
 
-    return v as t.Position;
+    return v as t.Vector;
 }
 
-// ValidateVelocity validates the needed type constraints
-// from v and cast it to Velocity.
-export function ValidateVelocity(v: any): t.Velocity {
-    if (typeof v.x !== "number") throw new ValidationError("missing v.x");
-    if (typeof v.y !== "number") throw new ValidationError("missing v.y");
-
-    return v as t.Velocity;
-}
-
-// ValidateMapMetadata validates the needed type constraints
-// from v and cast it to MapMetadata.
-export function ValidateMapMetadata(v: any): t.MapMetadata {
-    if (typeof v.goals !== "object") throw new ValidationError("missing v.goals");
-
-    return v as t.MapMetadata;
-}
-
-// ValidateMapGoal validates the needed type constraints
-// from v and cast it to MapGoal.
-export function ValidateMapGoal(v: any): t.MapGoal {
-    if (v.from === undefined) throw new ValidationError("missing v.from");
-    ValidatePosition(v.from);
-    if (v.to === undefined) throw new ValidationError("missing v.to");
-    ValidatePosition(v.to);
-
-    return v as t.MapGoal;
-}
-
-// ValidateScore validates the needed type constraints
+// validateScore validates the needed type constraints
 // from v and cast it to Score.
-export function ValidateScore(v: any): t.Score {
+export function validateScore(v: any): t.Score {
     if (typeof v.username !== "string") throw new ValidationError("missing v.username");
     if (v.time === undefined) throw new ValidationError("missing v.time");
 
     return v as t.Score;
 }
 
-// ValidateEvent validates the needed type constraints
+// validateEvent validates the needed type constraints
 // from v and cast it to Event.
-export function ValidateEvent(v: any): t.Event {
+export function validateEvent(v: any): t.Event {
     switch (v.type) {
         case "HELLO": {
-            ValidateHelloEvent(v);
+            validateHelloEvent(v);
             break;
         }
         case "WARNING": {
-            ValidateWarningEvent(v);
+            validateWarningEvent(v);
             break;
         }
-        case "MAP_DATA": {
-            ValidateMapDataEvent(v);
+        case "LEVEL_JOINED": {
+            validateLevelJoinedEvent(v);
             break;
         }
-        case "VICTORY": {
-            ValidateVictoryEvent(v);
+        case "LEVEL_FINISHED": {
+            validateLevelFinishedEvent(v);
             break;
         }
-        case "CORRECTION": {
-            ValidateCorrectionEvent(v);
+        case "ENTITY_MOVE": {
+            validateEntityMoveEvent(v);
             break;
         }
         case undefined: {
@@ -88,20 +60,21 @@ export function ValidateEvent(v: any): t.Event {
     return v as t.Event;
 }
 
-// ValidateHelloEvent validates the needed type constraints
+// validateHelloEvent validates the needed type constraints
 // from v and cast it to HelloEvent.
-export function ValidateHelloEvent(v: any): t.HelloEvent {
+export function validateHelloEvent(v: any): t.HelloEvent {
     if (v.type !== "HELLO") throw new ValidationError("missing v.type");
     if (v.d === undefined) throw new ValidationError("missing v.d");
+    if (typeof v.d.username !== "string") throw new ValidationError("missing v.d.username");
     if (typeof v.d.nLevels !== "number") throw new ValidationError("missing v.d.nLevels");
     if (typeof v.d.completedLevels !== "object") throw new ValidationError("missing v.d.completedLevels");
 
     return v as t.HelloEvent;
 }
 
-// ValidateWarningEvent validates the needed type constraints
+// validateWarningEvent validates the needed type constraints
 // from v and cast it to WarningEvent.
-export function ValidateWarningEvent(v: any): t.WarningEvent {
+export function validateWarningEvent(v: any): t.WarningEvent {
     if (v.type !== "WARNING") throw new ValidationError("missing v.type");
     if (v.d === undefined) throw new ValidationError("missing v.d");
     if (typeof v.d.message !== "string") throw new ValidationError("missing v.d.message");
@@ -109,55 +82,60 @@ export function ValidateWarningEvent(v: any): t.WarningEvent {
     return v as t.WarningEvent;
 }
 
-// ValidateMapDataEvent validates the needed type constraints
-// from v and cast it to MapDataEvent.
-export function ValidateMapDataEvent(v: any): t.MapDataEvent {
-    if (v.type !== "MAP_DATA") throw new ValidationError("missing v.type");
+// validateLevelJoinedEvent validates the needed type constraints
+// from v and cast it to LevelJoinedEvent.
+export function validateLevelJoinedEvent(v: any): t.LevelJoinedEvent {
+    if (v.type !== "LEVEL_JOINED") throw new ValidationError("missing v.type");
     if (v.d === undefined) throw new ValidationError("missing v.d");
     if (typeof v.d.level !== "number") throw new ValidationError("missing v.d.level");
-    if (v.d.map === undefined) throw new ValidationError("missing v.d.map");
-    if (v.d.metadata === undefined) throw new ValidationError("missing v.d.metadata");
-    ValidateMapMetadata(v.d.metadata);
 
-    return v as t.MapDataEvent;
+    return v as t.LevelJoinedEvent;
 }
 
-// ValidateVictoryEvent validates the needed type constraints
-// from v and cast it to VictoryEvent.
-export function ValidateVictoryEvent(v: any): t.VictoryEvent {
-    if (v.type !== "VICTORY") throw new ValidationError("missing v.type");
+// validateLevelFinishedEvent validates the needed type constraints
+// from v and cast it to LevelFinishedEvent.
+export function validateLevelFinishedEvent(v: any): t.LevelFinishedEvent {
+    if (v.type !== "LEVEL_FINISHED") throw new ValidationError("missing v.type");
     if (v.d === undefined) throw new ValidationError("missing v.d");
     if (typeof v.d.level !== "number") throw new ValidationError("missing v.d.level");
-    if (typeof v.d.time !== "number") throw new ValidationError("missing v.d.time");
+    if (typeof v.d.won !== "boolean") throw new ValidationError("missing v.d.won");
+    if (v.d.time === undefined) throw new ValidationError("missing v.d.time");
 
-    return v as t.VictoryEvent;
+    return v as t.LevelFinishedEvent;
 }
 
-// ValidateCorrectionEvent validates the needed type constraints
-// from v and cast it to CorrectionEvent.
-export function ValidateCorrectionEvent(v: any): t.CorrectionEvent {
-    if (v.type !== "CORRECTION") throw new ValidationError("missing v.type");
+// validateEntityPositionData validates the needed type constraints
+// from v and cast it to EntityPositionData.
+export function validateEntityPositionData(v: any): t.EntityPositionData {
+    if (v.initial === undefined) throw new ValidationError("missing v.initial");
+    validateVector(v.initial);
+    if (v.position === undefined) throw new ValidationError("missing v.position");
+    validateVector(v.position);
+
+    return v as t.EntityPositionData;
+}
+
+// validateEntityMoveEvent validates the needed type constraints
+// from v and cast it to EntityMoveEvent.
+export function validateEntityMoveEvent(v: any): t.EntityMoveEvent {
+    if (v.type !== "ENTITY_MOVE") throw new ValidationError("missing v.type");
     if (v.d === undefined) throw new ValidationError("missing v.d");
-    if (!(v.d.position === undefined)) {
-        ValidatePosition(v.d.position);
-    }
-    if (!(v.d.velocity === undefined)) {
-        ValidateVelocity(v.d.velocity);
-    }
+    if (typeof v.d.level !== "number") throw new ValidationError("missing v.d.level");
+    if (typeof v.d.entities !== "object") throw new ValidationError("missing v.d.entities");
 
-    return v as t.CorrectionEvent;
+    return v as t.EntityMoveEvent;
 }
 
-// ValidateCommand validates the needed type constraints
+// validateCommand validates the needed type constraints
 // from v and cast it to Command.
-export function ValidateCommand(v: any): t.Command {
+export function validateCommand(v: any): t.Command {
     switch (v.type) {
         case "JOIN": {
-            ValidateJoinCommand(v);
+            validateJoinCommand(v);
             break;
         }
         case "MOVE": {
-            ValidateMoveCommand(v);
+            validateMoveCommand(v);
             break;
         }
         case undefined: {
@@ -171,9 +149,9 @@ export function ValidateCommand(v: any): t.Command {
     return v as t.Command;
 }
 
-// ValidateJoinCommand validates the needed type constraints
+// validateJoinCommand validates the needed type constraints
 // from v and cast it to JoinCommand.
-export function ValidateJoinCommand(v: any): t.JoinCommand {
+export function validateJoinCommand(v: any): t.JoinCommand {
     if (v.type !== "JOIN") throw new ValidationError("missing v.type");
     if (v.d === undefined) throw new ValidationError("missing v.d");
     if (typeof v.d.level !== "number") throw new ValidationError("missing v.d.level");
@@ -181,13 +159,13 @@ export function ValidateJoinCommand(v: any): t.JoinCommand {
     return v as t.JoinCommand;
 }
 
-// ValidateMoveCommand validates the needed type constraints
+// validateMoveCommand validates the needed type constraints
 // from v and cast it to MoveCommand.
-export function ValidateMoveCommand(v: any): t.MoveCommand {
+export function validateMoveCommand(v: any): t.MoveCommand {
     if (v.type !== "MOVE") throw new ValidationError("missing v.type");
     if (v.d === undefined) throw new ValidationError("missing v.d");
     if (v.d.position === undefined) throw new ValidationError("missing v.d.position");
-    ValidatePosition(v.d.position);
+    validateVector(v.d.position);
 
     return v as t.MoveCommand;
 }

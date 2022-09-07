@@ -18,7 +18,7 @@ export class Client extends ws.ExtendedWebSocket {
             onMessage: (data: unknown) => {
                 let ev: Event;
                 try {
-                    ev = validator.ValidateEvent(data);
+                    ev = validator.validateEvent(data);
                 } catch (err) {
                     this.closeWithError(`${err}`, 1002);
                     return;

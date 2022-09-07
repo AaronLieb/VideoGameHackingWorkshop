@@ -1,161 +1,207 @@
-// deno-fmt-ignore-file
-// deno-lint-ignore-file
-// This code was bundled using `deno bundle` and it's not recommended to edit it manually
-
-class ValidationError extends Error {
+// ValidationError is thrown on every error returned by validateX
+// functions.
+export class ValidationError extends Error {
 }
-function ValidatePosition(v) {
-    if (typeof v.x !== "number") throw new ValidationError("missing v.x");
-    if (typeof v.y !== "number") throw new ValidationError("missing v.y");
-    return v;
-}
-function ValidateVelocity(v) {
-    if (typeof v.x !== "number") throw new ValidationError("missing v.x");
-    if (typeof v.y !== "number") throw new ValidationError("missing v.y");
-    return v;
-}
-function ValidateMapMetadata(v) {
-    if (typeof v.goals !== "object") throw new ValidationError("missing v.goals");
-    return v;
-}
-function ValidateMapGoal(v) {
-    if (v.from === undefined) throw new ValidationError("missing v.from");
-    ValidatePosition(v.from);
-    if (v.to === undefined) throw new ValidationError("missing v.to");
-    ValidatePosition(v.to);
-    return v;
-}
-function ValidateScore(v) {
-    if (typeof v.username !== "string") throw new ValidationError("missing v.username");
-    if (v.time === undefined) throw new ValidationError("missing v.time");
-    return v;
-}
-function ValidateEvent(v) {
-    switch(v.type){
-        case "HELLO":
-            {
-                ValidateHelloEvent(v);
-                break;
-            }
-        case "WARNING":
-            {
-                ValidateWarningEvent(v);
-                break;
-            }
-        case "MAP_DATA":
-            {
-                ValidateMapDataEvent(v);
-                break;
-            }
-        case "VICTORY":
-            {
-                ValidateVictoryEvent(v);
-                break;
-            }
-        case "CORRECTION":
-            {
-                ValidateCorrectionEvent(v);
-                break;
-            }
-        case undefined:
-            {
-                throw new ValidationError("missing v.type");
-            }
-        default:
-            {
-                throw new ValidationError("unknown v.type given");
-            }
+// validateVector validates the needed type constraints
+// from v and cast it to Vector.
+export function validateVector(v) {
+    if (typeof v.x !== "number") {
+        throw new ValidationError("missing v.x");
+    }
+    if (typeof v.y !== "number") {
+        throw new ValidationError("missing v.y");
     }
     return v;
 }
-function ValidateHelloEvent(v) {
-    if (v.type !== "HELLO") throw new ValidationError("missing v.type");
-    if (v.d === undefined) throw new ValidationError("missing v.d");
-    if (typeof v.d.nLevels !== "number") throw new ValidationError("missing v.d.nLevels");
-    if (typeof v.d.completedLevels !== "object") throw new ValidationError("missing v.d.completedLevels");
-    return v;
-}
-function ValidateWarningEvent(v) {
-    if (v.type !== "WARNING") throw new ValidationError("missing v.type");
-    if (v.d === undefined) throw new ValidationError("missing v.d");
-    if (typeof v.d.message !== "string") throw new ValidationError("missing v.d.message");
-    return v;
-}
-function ValidateMapDataEvent(v) {
-    if (v.type !== "MAP_DATA") throw new ValidationError("missing v.type");
-    if (v.d === undefined) throw new ValidationError("missing v.d");
-    if (typeof v.d.level !== "number") throw new ValidationError("missing v.d.level");
-    if (v.d.map === undefined) throw new ValidationError("missing v.d.map");
-    if (v.d.metadata === undefined) throw new ValidationError("missing v.d.metadata");
-    ValidateMapMetadata(v.d.metadata);
-    return v;
-}
-function ValidateVictoryEvent(v) {
-    if (v.type !== "VICTORY") throw new ValidationError("missing v.type");
-    if (v.d === undefined) throw new ValidationError("missing v.d");
-    if (typeof v.d.level !== "number") throw new ValidationError("missing v.d.level");
-    if (typeof v.d.time !== "number") throw new ValidationError("missing v.d.time");
-    return v;
-}
-function ValidateCorrectionEvent(v) {
-    if (v.type !== "CORRECTION") throw new ValidationError("missing v.type");
-    if (v.d === undefined) throw new ValidationError("missing v.d");
-    if (!(v.d.position === undefined)) {
-        ValidatePosition(v.d.position);
+// validateScore validates the needed type constraints
+// from v and cast it to Score.
+export function validateScore(v) {
+    if (typeof v.username !== "string") {
+        throw new ValidationError("missing v.username");
     }
-    if (!(v.d.velocity === undefined)) {
-        ValidateVelocity(v.d.velocity);
+    if (v.time === undefined) {
+        throw new ValidationError("missing v.time");
     }
     return v;
 }
-function ValidateCommand(v) {
-    switch(v.type){
-        case "JOIN":
-            {
-                ValidateJoinCommand(v);
-                break;
-            }
-        case "MOVE":
-            {
-                ValidateMoveCommand(v);
-                break;
-            }
-        case undefined:
-            {
-                throw new ValidationError("missing v.type");
-            }
-        default:
-            {
-                throw new ValidationError("unknown v.type given");
-            }
+// validateEvent validates the needed type constraints
+// from v and cast it to Event.
+export function validateEvent(v) {
+    switch (v.type) {
+        case "HELLO": {
+            validateHelloEvent(v);
+            break;
+        }
+        case "WARNING": {
+            validateWarningEvent(v);
+            break;
+        }
+        case "LEVEL_JOINED": {
+            validateLevelJoinedEvent(v);
+            break;
+        }
+        case "LEVEL_FINISHED": {
+            validateLevelFinishedEvent(v);
+            break;
+        }
+        case "ENTITY_MOVE": {
+            validateEntityMoveEvent(v);
+            break;
+        }
+        case undefined: {
+            throw new ValidationError("missing v.type");
+        }
+        default: {
+            throw new ValidationError("unknown v.type given");
+        }
     }
     return v;
 }
-function ValidateJoinCommand(v) {
-    if (v.type !== "JOIN") throw new ValidationError("missing v.type");
-    if (v.d === undefined) throw new ValidationError("missing v.d");
-    if (typeof v.d.level !== "number") throw new ValidationError("missing v.d.level");
+// validateHelloEvent validates the needed type constraints
+// from v and cast it to HelloEvent.
+export function validateHelloEvent(v) {
+    if (v.type !== "HELLO") {
+        throw new ValidationError("missing v.type");
+    }
+    if (v.d === undefined) {
+        throw new ValidationError("missing v.d");
+    }
+    if (typeof v.d.username !== "string") {
+        throw new ValidationError("missing v.d.username");
+    }
+    if (typeof v.d.nLevels !== "number") {
+        throw new ValidationError("missing v.d.nLevels");
+    }
+    if (typeof v.d.completedLevels !== "object") {
+        throw new ValidationError("missing v.d.completedLevels");
+    }
     return v;
 }
-function ValidateMoveCommand(v) {
-    if (v.type !== "MOVE") throw new ValidationError("missing v.type");
-    if (v.d === undefined) throw new ValidationError("missing v.d");
-    if (v.d.position === undefined) throw new ValidationError("missing v.d.position");
-    ValidatePosition(v.d.position);
+// validateWarningEvent validates the needed type constraints
+// from v and cast it to WarningEvent.
+export function validateWarningEvent(v) {
+    if (v.type !== "WARNING") {
+        throw new ValidationError("missing v.type");
+    }
+    if (v.d === undefined) {
+        throw new ValidationError("missing v.d");
+    }
+    if (typeof v.d.message !== "string") {
+        throw new ValidationError("missing v.d.message");
+    }
     return v;
 }
-export { ValidationError as ValidationError };
-export { ValidatePosition as ValidatePosition };
-export { ValidateVelocity as ValidateVelocity };
-export { ValidateMapMetadata as ValidateMapMetadata };
-export { ValidateMapGoal as ValidateMapGoal };
-export { ValidateScore as ValidateScore };
-export { ValidateEvent as ValidateEvent };
-export { ValidateHelloEvent as ValidateHelloEvent };
-export { ValidateWarningEvent as ValidateWarningEvent };
-export { ValidateMapDataEvent as ValidateMapDataEvent };
-export { ValidateVictoryEvent as ValidateVictoryEvent };
-export { ValidateCorrectionEvent as ValidateCorrectionEvent };
-export { ValidateCommand as ValidateCommand };
-export { ValidateJoinCommand as ValidateJoinCommand };
-export { ValidateMoveCommand as ValidateMoveCommand };
+// validateLevelJoinedEvent validates the needed type constraints
+// from v and cast it to LevelJoinedEvent.
+export function validateLevelJoinedEvent(v) {
+    if (v.type !== "LEVEL_JOINED") {
+        throw new ValidationError("missing v.type");
+    }
+    if (v.d === undefined) {
+        throw new ValidationError("missing v.d");
+    }
+    if (typeof v.d.level !== "number") {
+        throw new ValidationError("missing v.d.level");
+    }
+    return v;
+}
+// validateLevelFinishedEvent validates the needed type constraints
+// from v and cast it to LevelFinishedEvent.
+export function validateLevelFinishedEvent(v) {
+    if (v.type !== "LEVEL_FINISHED") {
+        throw new ValidationError("missing v.type");
+    }
+    if (v.d === undefined) {
+        throw new ValidationError("missing v.d");
+    }
+    if (typeof v.d.level !== "number") {
+        throw new ValidationError("missing v.d.level");
+    }
+    if (typeof v.d.won !== "boolean") {
+        throw new ValidationError("missing v.d.won");
+    }
+    if (v.d.time === undefined) {
+        throw new ValidationError("missing v.d.time");
+    }
+    return v;
+}
+// validateEntityPositionData validates the needed type constraints
+// from v and cast it to EntityPositionData.
+export function validateEntityPositionData(v) {
+    if (v.initial === undefined) {
+        throw new ValidationError("missing v.initial");
+    }
+    validateVector(v.initial);
+    if (v.position === undefined) {
+        throw new ValidationError("missing v.position");
+    }
+    validateVector(v.position);
+    return v;
+}
+// validateEntityMoveEvent validates the needed type constraints
+// from v and cast it to EntityMoveEvent.
+export function validateEntityMoveEvent(v) {
+    if (v.type !== "ENTITY_MOVE") {
+        throw new ValidationError("missing v.type");
+    }
+    if (v.d === undefined) {
+        throw new ValidationError("missing v.d");
+    }
+    if (typeof v.d.level !== "number") {
+        throw new ValidationError("missing v.d.level");
+    }
+    if (typeof v.d.entities !== "object") {
+        throw new ValidationError("missing v.d.entities");
+    }
+    return v;
+}
+// validateCommand validates the needed type constraints
+// from v and cast it to Command.
+export function validateCommand(v) {
+    switch (v.type) {
+        case "JOIN": {
+            validateJoinCommand(v);
+            break;
+        }
+        case "MOVE": {
+            validateMoveCommand(v);
+            break;
+        }
+        case undefined: {
+            throw new ValidationError("missing v.type");
+        }
+        default: {
+            throw new ValidationError("unknown v.type given");
+        }
+    }
+    return v;
+}
+// validateJoinCommand validates the needed type constraints
+// from v and cast it to JoinCommand.
+export function validateJoinCommand(v) {
+    if (v.type !== "JOIN") {
+        throw new ValidationError("missing v.type");
+    }
+    if (v.d === undefined) {
+        throw new ValidationError("missing v.d");
+    }
+    if (typeof v.d.level !== "number") {
+        throw new ValidationError("missing v.d.level");
+    }
+    return v;
+}
+// validateMoveCommand validates the needed type constraints
+// from v and cast it to MoveCommand.
+export function validateMoveCommand(v) {
+    if (v.type !== "MOVE") {
+        throw new ValidationError("missing v.type");
+    }
+    if (v.d === undefined) {
+        throw new ValidationError("missing v.d");
+    }
+    if (v.d.position === undefined) {
+        throw new ValidationError("missing v.d.position");
+    }
+    validateVector(v.d.position);
+    return v;
+}

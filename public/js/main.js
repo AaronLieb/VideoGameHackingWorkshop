@@ -1,4 +1,3 @@
-import * as ws from "/public/js/common/wsclient.js";
 import * as session from "/public/js/session.js";
 import { Keyboard } from "/public/js/keyboard.js";
 import { Player } from "/public/js/player.js";
@@ -15,8 +14,14 @@ app.ticker.add((delta) => {
 
 const player = new Player();
 
-document.body.appendChild(app.view);
+const ses = await session.Connect()
+    .catch((err) => {
+        if (err instanceof session.NotLoggedInError) {
+            window.location.replace("/login/");
+        } else {
+            alert(`cannot connect to WS: ${err}`);
+        }
+        throw err;
+    });
 
-const socket = new WebSocket("ws:///api/ws");
-const ses = new session.Session();
-new ws.Client(socket, ses);
+console.log(`logged in as ${ses.username}`);

@@ -2,15 +2,18 @@ const validKeyCodes = [87, 65, 83, 68, 32]; // wasd, space
 
 const keyDownHandler = (e) => {
     if (!validKeyCodes.includes(e.keyCode)) return;
-    if (e.keyCode === 32) e.key = "space";
-    Keyboard[e.key] = true;
+    let keyName = e.key;
+    if (e.keyCode === 32) keyName = "space";
+    console.log(`Pressed ${keyName}`);
+    Keyboard[keyName] = true;
     event.preventDefault();
 };
 
 const keyUpHandler = (e) => {
     if (!validKeyCodes.includes(e.keyCode)) return;
-    if (e.keyCode === 32) e.key = "space";
-    Keyboard[e.key] = false;
+    let keyName = e.key;
+    if (e.keyCode === 32) keyName = "space";
+    Keyboard[keyName] = false;
     event.preventDefault();
 };
 

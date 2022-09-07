@@ -1,12 +1,7 @@
-import { Command, MapMetadata, Millisecond, RawMap } from "/src/common/types.ts";
-import * as validator from "/src/common/types_validator.ts";
+import { Block, Command, Vector, TickDuration } from "/src/common/types.ts";
+import * as entity from "/src/common/entity.ts";
 import * as map from "/src/common/map.ts";
 import * as ws from "/src/ws.ts";
-
-export function Metadata(raw: Record<string, unknown>): MapMetadata {
-    // Yes, this is disgusting.
-    return validator.ValidateMapMetadata(JSON.parse(JSON.stringify(raw)));
-}
 
 export interface Session {
     setScore(level: number, time: number): Promise<void>;
@@ -14,46 +9,40 @@ export interface Session {
 
 // Level describes a level with all its server logic.
 export class Level {
-    readonly map: map.Data;
+    readonly map: map.Map;
     readonly level: number;
     readonly startsAt: number;
     readonly session: Session;
 
-    private wonAt: number | undefined;
+    entities = new Map<Vector, entity.Entity>();
 
-    constructor(s: Session, map: map.Data, level: number) {
+    private wonAt: number | undefined;
+    private tickID: number | undefined;
+
+    constructor(s: Session, map: map.Map, level: number) {
         this.map = map;
         this.level = level;
-        this.startsAt = Date.now();
         this.session = s;
+        this.startsAt = Date.now();
+        this.tickID = setInterval(this.tick, TickDuration);
     }
 
     destroy() {
-        // reserved for future use
-    }
-
-    handleCommand(server: ws.Server, cmd: Command) {
-        switch (cmd.type) {
-            case "MOVE": {
-                if (!this.wonAt) {
-                    const pos = cmd.d.position;
-                    if (this.map.withinGoal(pos)) {
-                        this.wonAt = Date.now();
-                        const time = this.wonAt - this.startsAt;
-
-                        this.session.setScore(this.level, time);
-                        server.send({
-                            type: "VICTORY",
-                            d: {
-                                level: this.level,
-                                time: time,
-                            },
-                        });
-                    }
-                }
-
-                break;
-            }
+        if (this.tickID) {
+            clearInterval(this.tickID);
+            this.tickID = undefined;
         }
     }
+
+    // initializeEntity initializes all entities with the given block. newFn is
+    // called as the entity constructor for each entity.
+    initializeEntity(block: Block, newFn: (pos: Vector) => entity.Entity) {
+        this.map.iterateEntity(block, (pos: Vector) => {
+            this.entities.set(pos, newFn(pos));
+        });
+    }
+
+    handleCommand(_server: ws.Server, _cmd: Command) {}
+
+    tick() {}
 }

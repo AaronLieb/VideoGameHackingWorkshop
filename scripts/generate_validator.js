@@ -39,7 +39,7 @@ async function generate(sourceFile) {
 		// deno-lint-ignore-file
 		import * as t from "./${sourceFile.split("/").at(-1)}";
 
-		// ValidationError is thrown on every error returned by ValidateX
+		// ValidationError is thrown on every error returned by validateX
 		// functions.
 		export class ValidationError extends Error {}
 
@@ -82,9 +82,9 @@ class validator {
                 opts: this._doType(typ),
             }))
             .map((o) => (o.opts == null ? "" : `
-				// Validate${o.name} validates the needed type constraints
+				// validate${o.name} validates the needed type constraints
 				// from v and cast it to ${o.name}.
-				export function Validate${o.name}(v: any): t.${o.name} {
+				export function validate${o.name}(v: any): t.${o.name} {
 					${o.opts}
 					return v as t.${o.name};
 				};
@@ -118,7 +118,7 @@ class validator {
                     return [];
                 }
 
-                return [`Validate${tsType.typeRef.typeName}(${prefix})`];
+                return [`validate${tsType.typeRef.typeName}(${prefix})`];
             }
             case "typeLiteral": {
                 const props = tsType.typeLiteral.properties;
@@ -256,7 +256,7 @@ class validator {
                     .filter((v) => !!v.type)
                     .forEach((v) => {
                         opts.push(`case "${v.literal}": {`);
-                        opts.push(`  Validate${v.type}(v)`);
+                        opts.push(`  validate${v.type}(v)`);
                         opts.push(`  break`);
                         opts.push(`}`);
                     });

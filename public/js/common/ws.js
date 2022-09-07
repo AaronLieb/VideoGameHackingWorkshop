@@ -1,15 +1,11 @@
-// deno-fmt-ignore-file
-// deno-lint-ignore-file
-// This code was bundled using `deno bundle` and it's not recommended to edit it manually
-
-class ExtendedWebSocket {
-    constructor(socket, handlers){
+export class ExtendedWebSocket {
+    constructor(socket, handlers) {
         this.socket = socket;
         this.socket.onopen = handlers.onOpen;
-        this.socket.onclose = (ev)=>{
+        this.socket.onclose = (ev) => {
             handlers.onClose(ev.code);
         };
-        this.socket.onmessage = (ev)=>{
+        this.socket.onmessage = (ev) => {
             if (typeof ev.data != "string") {
                 this.closeWithError("server only accepts text payloads", 1003);
                 return;
@@ -31,9 +27,10 @@ class ExtendedWebSocket {
     close() {
         this.socket.close();
     }
+    // closeWithError closes the WebSocket with an abnormal error code. For more
+    // information, see
+    // https://www.rfc-editor.org/rfc/rfc6455.html#section-7.4.1.
     closeWithError(error, code = 1008) {
         this.socket.close(code, error);
     }
-    socket;
 }
-export { ExtendedWebSocket as ExtendedWebSocket };
