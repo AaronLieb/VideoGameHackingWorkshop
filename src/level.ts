@@ -1,12 +1,6 @@
-import { Command, MapMetadata, Millisecond, RawMap } from "/src/common/types.ts";
-import * as validator from "/src/common/types_validator.ts";
+import { Command } from "/src/common/types.ts";
 import * as map from "/src/common/map.ts";
 import * as ws from "/src/ws.ts";
-
-export function Metadata(raw: Record<string, unknown>): MapMetadata {
-    // Yes, this is disgusting.
-    return validator.ValidateMapMetadata(JSON.parse(JSON.stringify(raw)));
-}
 
 export interface Session {
     setScore(level: number, time: number): Promise<void>;
