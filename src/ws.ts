@@ -1,81 +1,65 @@
-import { Command as WSCommand, Event } from "/src/common/types.ts";
+import { Command, Event } from "/src/common/types.ts";
 import * as validator from "/src/common/types_validator.ts";
+import * as ws from "/src/common/ws.ts";
 
-export type Command =
-    | WSCommand
-    | { type: "open" }
-    | { type: "close"; code: number };
+// CommandHandler describes an object that can handle commands.
+export interface CommandHandler {
+    handleCommand(server: Server, cmd: Command): Promise<void> | void;
+}
 
-class handlerSet extends Set<(_: Command) => void> {
-    dispatch(cmd: Command) {
-        for (const handler of this) {
-            handler(cmd);
-        }
-    }
+// Upgrade upgrades the given request to a Websocket and dispatches it to the
+// given handler.
+export function Upgrade(r: Request, handler: CommandHandler): Response {
+    const upgrade = Deno.upgradeWebSocket(r);
+    new Server(upgrade.socket, handler);
+    return upgrade.response;
 }
 
 // Server is the Websocket server.
-export class Server {
-    private socket: WebSocket;
-    private handlers = new handlerSet();
+export class Server extends ws.ExtendedWebSocket {
+    constructor(socket: WebSocket, private readonly handler: CommandHandler) {
+        super(socket, {
+            onOpen: () => {
+                this.dispatch({ type: "_open" });
+            },
+            onClose: (code: number) => {
+                this.dispatch({ type: "_close", code: code });
+            },
+            onMessage: (data: unknown) => {
+                let cmd: Command;
+                try {
+                    cmd = validator.ValidateCommand(data);
+                } catch (err) {
+                    this.closeWithError(`${err}`, 1002);
+                    return;
+                }
 
-    constructor(socket: WebSocket) {
-        this.socket = socket;
-        this.socket.onopen = () => {
-            this.handlers.dispatch({ type: "open" });
-        };
-        this.socket.onclose = (ev: CloseEvent) => {
-            this.handlers.dispatch({ type: "close", code: ev.code });
-        };
-        this.socket.onmessage = (ev: MessageEvent) => {
-            if (typeof ev.data != "string") {
-                this.closeWithError("server only accepts text payloads", 1003);
-                return;
-            }
+                if (cmd.type.startsWith("_")) {
+                    this.closeWithError("illegal command type given", 1002);
+                    return;
+                }
 
-            let payload;
-            try {
-                payload = JSON.parse(ev.data);
-            } catch (err) {
-                this.closeWithError(`invalid JSON: ${err}`, 1002);
-                return;
-            }
+                this.dispatch(cmd);
+            },
+        });
+    }
 
-            let cmd: Command;
-            try {
-                cmd = validator.ValidateCommand(payload);
-            } catch (err) {
-                this.closeWithError(`${err}`, 1002);
-                return;
-            }
-
-            try {
-                this.handlers.dispatch(cmd);
-            } catch (err) {
-                console.error(err);
+    private dispatch(cmd: Command) {
+        const promise = this.handler.handleCommand(this, cmd);
+        if (promise) {
+            promise.catch((err) => {
+                this.send({
+                    type: "WARNING",
+                    d: {
+                        message: `${err}`,
+                    },
+                });
                 this.closeWithError(`${err}`);
-                return;
-            }
-        };
+            });
+        }
     }
 
     send(ev: Event) {
-        const p = JSON.stringify(ev);
-        this.socket.send(p);
-    }
-
-    close() {
-        this.socket.close();
-    }
-
-    // closeWithError closes the WebSocket with an abnormal error code. For more
-    // information, see
-    // https://www.rfc-editor.org/rfc/rfc6455.html#section-7.4.1.
-    closeWithError(error?: string, code = 1008) {
-        this.socket.close(code, error);
-    }
-
-    addHandler(handler: (cmd: Command) => void) {
-        this.handlers.add(handler);
+        super.send(ev);
     }
 }

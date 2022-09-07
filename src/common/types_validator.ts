@@ -25,6 +25,34 @@ export function ValidateVelocity(v: any): t.Velocity {
     return v as t.Velocity;
 }
 
+// ValidateMapMetadata validates the needed type constraints
+// from v and cast it to MapMetadata.
+export function ValidateMapMetadata(v: any): t.MapMetadata {
+    if (typeof v.goals !== "object") throw new ValidationError("missing v.goals");
+
+    return v as t.MapMetadata;
+}
+
+// ValidateMapGoal validates the needed type constraints
+// from v and cast it to MapGoal.
+export function ValidateMapGoal(v: any): t.MapGoal {
+    if (v.from === undefined) throw new ValidationError("missing v.from");
+    ValidatePosition(v.from);
+    if (v.to === undefined) throw new ValidationError("missing v.to");
+    ValidatePosition(v.to);
+
+    return v as t.MapGoal;
+}
+
+// ValidateScore validates the needed type constraints
+// from v and cast it to Score.
+export function ValidateScore(v: any): t.Score {
+    if (typeof v.username !== "string") throw new ValidationError("missing v.username");
+    if (v.time === undefined) throw new ValidationError("missing v.time");
+
+    return v as t.Score;
+}
+
 // ValidateEvent validates the needed type constraints
 // from v and cast it to Event.
 export function ValidateEvent(v: any): t.Event {
@@ -39,6 +67,10 @@ export function ValidateEvent(v: any): t.Event {
         }
         case "MAP_DATA": {
             ValidateMapDataEvent(v);
+            break;
+        }
+        case "VICTORY": {
+            ValidateVictoryEvent(v);
             break;
         }
         case "CORRECTION": {
@@ -85,8 +117,20 @@ export function ValidateMapDataEvent(v: any): t.MapDataEvent {
     if (typeof v.d.level !== "number") throw new ValidationError("missing v.d.level");
     if (v.d.map === undefined) throw new ValidationError("missing v.d.map");
     if (v.d.metadata === undefined) throw new ValidationError("missing v.d.metadata");
+    ValidateMapMetadata(v.d.metadata);
 
     return v as t.MapDataEvent;
+}
+
+// ValidateVictoryEvent validates the needed type constraints
+// from v and cast it to VictoryEvent.
+export function ValidateVictoryEvent(v: any): t.VictoryEvent {
+    if (v.type !== "VICTORY") throw new ValidationError("missing v.type");
+    if (v.d === undefined) throw new ValidationError("missing v.d");
+    if (typeof v.d.level !== "number") throw new ValidationError("missing v.d.level");
+    if (typeof v.d.time !== "number") throw new ValidationError("missing v.d.time");
+
+    return v as t.VictoryEvent;
 }
 
 // ValidateCorrectionEvent validates the needed type constraints
@@ -142,12 +186,8 @@ export function ValidateJoinCommand(v: any): t.JoinCommand {
 export function ValidateMoveCommand(v: any): t.MoveCommand {
     if (v.type !== "MOVE") throw new ValidationError("missing v.type");
     if (v.d === undefined) throw new ValidationError("missing v.d");
-    if (!(v.d.position === undefined)) {
-        ValidatePosition(v.d.position);
-    }
-    if (!(v.d.velocity === undefined)) {
-        ValidateVelocity(v.d.velocity);
-    }
+    if (v.d.position === undefined) throw new ValidationError("missing v.d.position");
+    ValidatePosition(v.d.position);
 
     return v as t.MoveCommand;
 }
