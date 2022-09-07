@@ -1,5 +1,10 @@
 {
-  "compilerOptions": {},
+    "compilerOptions": {},
+    "importMap": "import_map.json",
+    "tasks": {
+        "serve": "deno run --allow-net --allow-read src/server.ts",
+        "generate_validator": "deno run --allow-run --allow-read --allow-write scripts/generate_validator.js"
+    },
     "lint": {
         "files": {
             "include": [],
@@ -24,5 +29,8 @@
             "include": [],
             "exclude": []
         }
-    }
+    },
+    "generateValidator": [
+        "src/common/types.ts"
+    ]
 }
