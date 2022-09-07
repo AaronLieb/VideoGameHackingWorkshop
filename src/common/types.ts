@@ -23,6 +23,79 @@ export type Velocity = {
 // metadata must have this block defined.
 export type Block = string | "background";
 
+// BlockSize is the size of one block in pixels. One unit of Position in either
+// axis will equal to one block, which should be 16 pixels. The pixels do not
+// have to correspond to physical pixels, but all textures should be mapped to
+// be about 1:1 and treated as a 16x16 texture.
+export const BlockSize = 16;
+
+// BlockPosition forms all the possible positions of a block within itself.
+//
+// To demonstrate its purposes, here's how it works. Suppose we have the
+// following map:
+//
+//    LLLLLLLL
+//    LLLLLLLL
+//    LLLLLLLL
+//
+// We can deduce from this object that some of these blocks are outside, meaning
+// their neighbors are not the same block, while the other blocks all have their
+// neighbors be the same block. By checking what the neighbor blocks are and in
+// what direction, we can deduce the positions of these blocks.
+//
+// Once we have the position of these blocks, we can map them to different kinds
+// of textures (see BlockTextures). This allows designers to naturally design
+// maps without necessarily having to design tileable edge textures or have
+// different block characters for the same object.
+//
+// As a side note, if the edge of the block is the map boundary, then it can be
+// considered that the block is extending beyond that. For example, if we have
+// an L block touching the left boundary, then it is counted as a Middle block,
+// not a Left block.
+//
+// A block with no neighbor is considered floating.
+//
+// Below is a diagram to help visualize these positions:
+//
+//                 +----------+
+//                 | Floating |
+//                 +----------+
+//
+//   +---------------------------------------+
+//   | Top|Left        Top         Top|Right |
+//   |                                       |
+//   | Left           Middle           Right |
+//   |                                       |
+//   | Bottom|Left    Bottom    Bottom|Right |
+//   +---------------------------------------+
+//
+export enum BlockPosition {
+    Floating = 0, // no neighbor
+    Top = 1 << 0,
+    Bottom = 1 << 1,
+    Left = 1 << 2,
+    Right = 1 << 3,
+    Middle = Top | Bottom | Left | Right,
+
+    TopLeft = Top | Left,
+    TopRight = Top | Right,
+    BottomLeft = Bottom | Left,
+    BottomRight = Bottom | Right,
+}
+
+// BlockEdges contains edge positions.
+export const BlockEdges: BlockPosition[] = [
+    BlockPosition.Top,
+    BlockPosition.Bottom,
+    BlockPosition.Left,
+    BlockPosition.Right,
+];
+
+// BlockTextures maps each block position to the object ID.
+export type BlockTextures = {
+    [key in BlockPosition]: AssetID;
+};
+
 // BlockType is an enum that describes a block type, which is determined by
 // whether the object ID is under metadata.blocks or metadata.entities.
 export enum BlockType {
@@ -32,14 +105,15 @@ export enum BlockType {
 
 // BlockModifier is any modifier that a block can have within a map.
 export type BlockModifier =
-    | undefined
     // air lets the player pass through the block. Block "background"
     // automatically have this modifier.
-    | "air";
-
-// MapObjectID is the ID of an object. Objects are global, meaning all maps
-// share the same set of objects.
-export type MapObjectID = string;
+    | "air"
+    // goal turns all regions of the block into one goal. Use this in
+    // combination with air or the player won't be able to hit the goal.
+    | "goal"
+    // fixed forces the renderer to render this object at a fixed position by
+    // stretching the texture into the regions covered by 16x16 blocks.
+    | "fixed";
 
 // RawMap is the entire map described as an array of map lines. The length of
 // this array is guaranteed to be equal to the height in the metadata.
@@ -47,29 +121,18 @@ export type RawMap = string;
 
 // MapMetadata is the metadata of a map.
 export type MapMetadata = {
-    blocks: Record<Block, MapObjectID>;
-    entities: Record<Block, MapObjectID>;
+    blocks: Record<Block, AssetID | BlockTextures>;
+    entities: Record<Block, AssetID | BlockTextures>;
     blockMods: Record<Block, BlockModifier[]>;
-    goals: MapGoal[];
     attributes: Record<string, unknown>;
 };
 
-// MapGoal describes the bounds of a goal in a map. When a player is within the
-// goal, then they win the level.
-export type MapGoal = {
-    from: Position;
-    to: Position;
-};
-
-// MapObjects is the global registry of object IDs to its assets.
-export type MapObjects = {
-    assets: Record<MapObjectID, AssetPath>;
-};
+// AssetID is the ID of an asset. Assets are global, meaning all maps share the
+// same set of assets.
+export type AssetID = string;
 
 // AssetPath is a path to an asset.
 export type AssetPath = string;
-
-export type Username = string;
 
 // Leaderboards describes a leaderboard type. It contains the leaderboards of
 // all levels.

@@ -25,25 +25,6 @@ export function ValidateVelocity(v: any): t.Velocity {
     return v as t.Velocity;
 }
 
-// ValidateMapMetadata validates the needed type constraints
-// from v and cast it to MapMetadata.
-export function ValidateMapMetadata(v: any): t.MapMetadata {
-    if (typeof v.goals !== "object") throw new ValidationError("missing v.goals");
-
-    return v as t.MapMetadata;
-}
-
-// ValidateMapGoal validates the needed type constraints
-// from v and cast it to MapGoal.
-export function ValidateMapGoal(v: any): t.MapGoal {
-    if (v.from === undefined) throw new ValidationError("missing v.from");
-    ValidatePosition(v.from);
-    if (v.to === undefined) throw new ValidationError("missing v.to");
-    ValidatePosition(v.to);
-
-    return v as t.MapGoal;
-}
-
 // ValidateScore validates the needed type constraints
 // from v and cast it to Score.
 export function ValidateScore(v: any): t.Score {
@@ -117,7 +98,6 @@ export function ValidateMapDataEvent(v: any): t.MapDataEvent {
     if (typeof v.d.level !== "number") throw new ValidationError("missing v.d.level");
     if (v.d.map === undefined) throw new ValidationError("missing v.d.map");
     if (v.d.metadata === undefined) throw new ValidationError("missing v.d.metadata");
-    ValidateMapMetadata(v.d.metadata);
 
     return v as t.MapDataEvent;
 }

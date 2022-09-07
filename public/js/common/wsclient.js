@@ -14,10 +14,6 @@ function ValidateVelocity(v) {
     if (typeof v.y !== "number") throw new ValidationError("missing v.y");
     return v;
 }
-function ValidateMapMetadata(v) {
-    if (typeof v.goals !== "object") throw new ValidationError("missing v.goals");
-    return v;
-}
 function ValidateEvent(v) {
     switch(v.type){
         case "HELLO":
@@ -75,7 +71,6 @@ function ValidateMapDataEvent(v) {
     if (typeof v.d.level !== "number") throw new ValidationError("missing v.d.level");
     if (v.d.map === undefined) throw new ValidationError("missing v.d.map");
     if (v.d.metadata === undefined) throw new ValidationError("missing v.d.metadata");
-    ValidateMapMetadata(v.d.metadata);
     return v;
 }
 function ValidateVictoryEvent(v) {

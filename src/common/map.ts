@@ -1,21 +1,31 @@
 import {
+    AssetID,
     AssetPath,
     Block,
+    BlockEdges,
     BlockModifier,
+    BlockPosition,
+    BlockTextures,
     BlockType,
     MapMetadata,
-    MapObjectID,
     Position,
     RawMap,
 } from "/src/common/types.ts";
 
-export const NoTextureID: AssetPath = "notexture";
-export const BlankID: AssetPath = ""; // treat as all transparency
+export const NoTextureID: AssetID = "notexture";
+export const BlankTextureID: AssetID = ""; // treat as all transparency
+
+// AssetPath returns the absolute path to the object's asset given the asset ID.
+export function AssetPath(id: AssetID): AssetPath {
+    if (id === "") return "";
+    return "/public/assets/" + id + ".png";
+}
 
 // Map describes an entire map.
 export class Map {
     readonly lines: string[];
     readonly raw: RawMap;
+    readonly goals: Block[];
     readonly metadata: MapMetadata; // avoid using this
     readonly width: number; // calculated
     readonly height: number;
@@ -39,6 +49,13 @@ export class Map {
             }
         }
 
+        this.goals = [];
+        for (const [block, mods] of Object.entries(metadata.blockMods)) {
+            if (mods.includes("goal")) {
+                this.goals.push(block);
+            }
+        }
+
         this.raw = this.lines.join("\n");
         this.metadata = metadata;
         this.width = width;
@@ -46,20 +63,66 @@ export class Map {
     }
 
     // block looks up the object data by a block.
-    block(block: Block, type = BlockType.Block): MapObjectID {
-        let objectID: MapObjectID | undefined;
+    blockAsset(block: Block, position = BlockPosition.Floating, type = BlockType.Block): AssetID {
+        let assetID: AssetID | BlockTextures | undefined;
+
         switch (type) {
             case BlockType.Block:
-                objectID = this.metadata.blocks[block];
+                assetID = this.metadata.blocks[block];
                 break;
             case BlockType.EntityBlock:
-                objectID = this.metadata.entities[block];
+                assetID = this.metadata.entities[block];
                 break;
             default:
                 throw `unknown block type ${type}`;
         }
-        if (objectID !== undefined) return objectID;
+
+        if (assetID === undefined) {
+            if (block === "background") {
+                return BlankTextureID;
+            }
+            return NoTextureID;
+        }
+
+        // No positions, just use the one asset.
+        if (typeof assetID == "string") {
+            return assetID;
+        }
+
+        // Try and search for the exact position.
+        if (assetID[position] !== undefined) {
+            return assetID[position];
+        }
+
+        // Seek for the closest edge and use that texture instead. See the
+        // BlockEdges array for more information.
+        for (const edge of BlockEdges) {
+            if (position != edge && (position & edge) != 0 && edge && assetID[edge] !== undefined) {
+                return assetID[edge];
+            }
+        }
+
+        // Fallback.
         return NoTextureID;
+    }
+
+    blockPosition(pos: Position, block: Block): BlockPosition {
+        return this.blockPositionXY(pos.x, pos.y, block);
+    }
+
+    blockPositionXY(x: number, y: number, block: Block): BlockPosition {
+        const w = this.width;
+        const h = this.height;
+
+        let position = BlockPosition.Floating;
+        // These checks may seem counter-intuitive, but it makes sense. If we
+        // have the same block on the left, then we must be on the right, etc.
+        if (x >= w || this.lines[y][x + 1] == block) position |= BlockPosition.Left;
+        if (x <= 0 || this.lines[y][x - 1] == block) position |= BlockPosition.Right;
+        if (y >= h || this.lines[y + 1][x] == block) position |= BlockPosition.Top;
+        if (y <= 0 || this.lines[y - 1][x] == block) position |= BlockPosition.Bottom;
+
+        return position;
     }
 
     // blockAttributes looks up the attributes of a block.
@@ -77,11 +140,12 @@ export class Map {
     }
 
     // at looks up a block's object by the coordinates.
-    at(pos: Position, type = BlockType.Block): MapObjectID {
+    at(pos: Position, type = BlockType.Block): AssetID {
         // Access Y first, X last. Y describes the line, while X is the offset
         // within that line.
-        const block: Block = this.lines[pos.y][pos.x];
-        return this.block(block, type);
+        const block = this.lines[pos.y][pos.x];
+        const position = this.blockPosition(pos, block);
+        return this.blockAsset(block, position, type);
     }
 
     // iterate calls fn on the given bounds of the map. The function does some
@@ -139,14 +203,6 @@ export class Map {
     // withinGoal returns true if the given pair of coordinates is within any
     // goal.
     withinGoal(pos: Position): boolean {
-        for (const goal of this.metadata.goals) {
-            if (
-                goal.from.x <= pos.x && pos.x <= goal.to.x &&
-                goal.from.y <= pos.y && pos.y <= goal.to.y
-            ) {
-                return true;
-            }
-        }
-        return false;
+        return this.goals.includes(this.lines[pos.y][pos.x]);
     }
 }
