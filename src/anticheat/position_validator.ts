@@ -3,7 +3,7 @@ import * as map from "/src/common/map.ts";
 import * as level from "/src/level.ts";
 import { Block, Command, Position, Velocity } from "/src/common/types.ts";
 
-export function AllowedMapBlocks(map: map.Data): Block[] {
+export function AllowedMapBlocks(map: map.Map): Block[] {
     const airBlocks: Block[] = [];
 
     const check = (block: Block) => {

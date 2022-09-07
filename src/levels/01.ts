@@ -43,7 +43,7 @@ const metadata = {
     },
 };
 
-const levelMap = new map.Data(rawMap, metadata);
+const levelMap = new map.Map(rawMap, metadata);
 
 export class Level extends level.Level {
     constructor(s: level.Session) {

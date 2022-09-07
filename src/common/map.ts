@@ -9,16 +9,13 @@ import {
     RawMap,
 } from "/src/common/types.ts";
 
-// Objects listed here are guaranteed to exist.
-export const Objects: Record<MapObjectID, AssetPath> = {
-    "notexture": "notexture.png",
-    "blank": "", // special case, render as alpha
-};
+export const NoTextureID: AssetPath = "notexture";
+export const BlankID: AssetPath = ""; // treat as all transparency
 
-// Data describes an entire map.
-export class Data {
-    readonly raw: RawMap;
+// Map describes an entire map.
+export class Map {
     readonly lines: string[];
+    readonly raw: RawMap;
     readonly metadata: MapMetadata; // avoid using this
     readonly width: number; // calculated
     readonly height: number;
@@ -33,19 +30,19 @@ export class Data {
             width = Math.max(width, line.length);
         }
 
-        this.raw = raw;
-        this.metadata = metadata;
-        this.width = width;
-        this.height = raw.length;
-
         // Ensure that every single map line has a constant width.
-        this.lines = raw.split("/");
+        this.lines = raw.split("\n");
         for (let i = 0; i < this.lines.length; i++) {
             const missing = this.lines[i].length - width;
             if (missing > 0) {
                 this.lines[i] += " ".repeat(missing);
             }
         }
+
+        this.raw = this.lines.join("\n");
+        this.metadata = metadata;
+        this.width = width;
+        this.height = raw.length;
     }
 
     // block looks up the object data by a block.
@@ -61,8 +58,8 @@ export class Data {
             default:
                 throw `unknown block type ${type}`;
         }
-        if (objectID) return objectID;
-        return Objects["notexture"];
+        if (objectID !== undefined) return objectID;
+        return NoTextureID;
     }
 
     // blockAttributes looks up the attributes of a block.
@@ -87,7 +84,53 @@ export class Data {
         return this.block(block, type);
     }
 
-    // attribute looks up any attribute from the metadata attribute map. The
+    // iterate calls fn on the given bounds of the map. The function does some
+    // precalculations to ensure that iterations can be done slightly faster
+    // than regularly calling map.at().
+    iterate(
+        fn: (x: number, y: number, asset: AssetID, mods: BlockModifier[]) => void,
+        blockType = BlockType.Block,
+        x = 0,
+        y = 0,
+        w = this.width,
+        h = this.height,
+    ) {
+        let blocks: Record<Block, AssetID | BlockTextures>;
+
+        switch (blockType) {
+            case BlockType.Block:
+                blocks = this.metadata.blocks;
+                break;
+            case BlockType.EntityBlock:
+                blocks = this.metadata.entities;
+                break;
+            default:
+                throw `unknown block type ${blockType}`;
+        }
+
+        const blockAttributes: Record<Block, BlockModifier[]> = {};
+        for (const block in blocks) {
+            blockAttributes[block] = this.blockAttributes(block);
+        }
+
+        const x1 = x;
+        const y1 = y;
+        const x2 = x + w;
+        const y2 = y + h;
+
+        for (let y = y1; y < y2; y++) {
+            const line = this.lines[y];
+            for (let x = x1; x < x2; x++) {
+                const block = line[x];
+                const position = this.blockPositionXY(x, y, block);
+                const asset = this.blockAsset(block, position, blockType);
+                const mods = blockAttributes[block];
+                fn(x, y, asset, mods);
+            }
+        }
+    }
+
+    // attribute looks up any attribute from the metadata attribute this. The
     // user should cast the returned value to another known type.
     attribute(key: string): unknown {
         return this.metadata.attributes[key];

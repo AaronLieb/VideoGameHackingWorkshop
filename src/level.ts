@@ -14,14 +14,14 @@ export interface Session {
 
 // Level describes a level with all its server logic.
 export class Level {
-    readonly map: map.Data;
+    readonly map: map.Map;
     readonly level: number;
     readonly startsAt: number;
     readonly session: Session;
 
     private wonAt: number | undefined;
 
-    constructor(s: Session, map: map.Data, level: number) {
+    constructor(s: Session, map: map.Map, level: number) {
         this.map = map;
         this.level = level;
         this.startsAt = Date.now();
