@@ -96,13 +96,6 @@ function ValidateCorrectionEvent(v) {
     }
     return v;
 }
-class Fatal extends Error {
-    constructor(msg, code = 1008){
-        super(msg);
-        this.code = code;
-    }
-    code;
-}
 class ExtendedWebSocket {
     constructor(socket, handlers){
         this.socket = socket;
@@ -124,18 +117,6 @@ class ExtendedWebSocket {
             }
             handlers.onMessage(payload);
         };
-    }
-    catchError(err) {
-        if (err instanceof Fatal) {
-            this.closeWithError(err.message, err.code);
-        } else {
-            this.send({
-                type: "WARNING",
-                d: {
-                    message: `${err}`
-                }
-            });
-        }
     }
     send(data) {
         const p = JSON.stringify(data);
@@ -183,7 +164,10 @@ class Client extends ExtendedWebSocket {
     dispatch(ev) {
         const promise = this.handler.handleEvent(this, ev);
         if (promise) {
-            promise.catch(this.catchError);
+            promise.catch((err)=>{
+                console.warn("Websocket handler error caught:", err);
+                this.closeWithError(`${err}`);
+            });
         }
     }
     send(cmd) {

@@ -37,7 +37,10 @@ export class Client extends ws.ExtendedWebSocket {
     private dispatch(ev: Event) {
         const promise = this.handler.handleEvent(this, ev);
         if (promise) {
-            promise.catch(this.catchError);
+            promise.catch((err) => {
+                console.warn("Websocket handler error caught:", err);
+                this.closeWithError(`${err}`);
+            });
         }
     }
 

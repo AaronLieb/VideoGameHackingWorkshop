@@ -1,11 +1,3 @@
-// Fatal describes all fatal errors. Throwing this error causes the Websocket to
-// shut down.
-export class Fatal extends Error {
-    constructor(msg: string, readonly code = 1008) {
-        super(msg);
-    }
-}
-
 export class ExtendedWebSocket {
     constructor(
         private readonly socket: WebSocket,
@@ -35,19 +27,6 @@ export class ExtendedWebSocket {
 
             handlers.onMessage(payload);
         };
-    }
-
-    catchError(err: unknown) {
-        if (err instanceof Fatal) {
-            this.closeWithError(err.message, err.code);
-        } else {
-            this.send({
-                type: "WARNING",
-                d: {
-                    message: `${err}`,
-                },
-            });
-        }
     }
 
     send(data: unknown) {

@@ -2,13 +2,6 @@
 // deno-lint-ignore-file
 // This code was bundled using `deno bundle` and it's not recommended to edit it manually
 
-class Fatal extends Error {
-    constructor(msg, code = 1008){
-        super(msg);
-        this.code = code;
-    }
-    code;
-}
 class ExtendedWebSocket {
     constructor(socket, handlers){
         this.socket = socket;
@@ -31,18 +24,6 @@ class ExtendedWebSocket {
             handlers.onMessage(payload);
         };
     }
-    catchError(err) {
-        if (err instanceof Fatal) {
-            this.closeWithError(err.message, err.code);
-        } else {
-            this.send({
-                type: "WARNING",
-                d: {
-                    message: `${err}`
-                }
-            });
-        }
-    }
     send(data) {
         const p = JSON.stringify(data);
         this.socket.send(p);
@@ -55,5 +36,4 @@ class ExtendedWebSocket {
     }
     socket;
 }
-export { Fatal as Fatal };
 export { ExtendedWebSocket as ExtendedWebSocket };
