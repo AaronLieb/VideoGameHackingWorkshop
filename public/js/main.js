@@ -1,11 +1,20 @@
 import * as ws from "/public/js/common/wsclient.js";
 import * as session from "/public/js/session.js";
+import { Keyboard } from "/public/js/keyboard.js";
+import { Player } from "/public/js/player.js";
+import { physicsLoop } from "/public/js/physics.js";
+import { app, initializeApp } from "/public/js/render.js";
 
-let type = "WebGL";
-if (!PIXI.utils.isWebGLSupported()) type = "canvas";
-PIXI.utils.sayHello(type);
+initializeApp();
+Keyboard.initializeListeners();
 
-const app = new PIXI.Application({ width: 256, height: 256 });
+// game loop
+app.ticker.add((delta) => {
+    physicsLoop(delta);
+});
+
+const player = new Player();
+
 document.body.appendChild(app.view);
 
 const socket = new WebSocket("ws:///api/ws");
