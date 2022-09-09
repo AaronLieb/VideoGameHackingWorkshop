@@ -31,8 +31,8 @@ export class Map {
     readonly height: number;
 
     constructor(raw: RawMap, metadata: MapMetadata) {
-        if (!metadata.blocks["background"]) {
-            throw `map metadata is missing "background"`;
+        if (metadata.blocks["background"] === undefined) {
+            metadata.blocks["background"] = "";
         }
 
         let width = 0;
