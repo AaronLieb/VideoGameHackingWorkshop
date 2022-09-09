@@ -1,12 +1,6 @@
-import { Command, MapMetadata, Millisecond, RawMap } from "/src/common/types.ts";
-import * as validator from "/src/common/types_validator.ts";
+import { Command } from "/src/common/types.ts";
 import * as map from "/src/common/map.ts";
 import * as ws from "/src/ws.ts";
-
-export function Metadata(raw: Record<string, unknown>): MapMetadata {
-    // Yes, this is disgusting.
-    return validator.ValidateMapMetadata(JSON.parse(JSON.stringify(raw)));
-}
 
 export interface Session {
     setScore(level: number, time: number): Promise<void>;
@@ -14,14 +8,14 @@ export interface Session {
 
 // Level describes a level with all its server logic.
 export class Level {
-    readonly map: map.Data;
+    readonly map: map.Map;
     readonly level: number;
     readonly startsAt: number;
     readonly session: Session;
 
     private wonAt: number | undefined;
 
-    constructor(s: Session, map: map.Data, level: number) {
+    constructor(s: Session, map: map.Map, level: number) {
         this.map = map;
         this.level = level;
         this.startsAt = Date.now();

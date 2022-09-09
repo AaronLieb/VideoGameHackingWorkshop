@@ -14,17 +14,6 @@ function ValidateVelocity(v) {
     if (typeof v.y !== "number") throw new ValidationError("missing v.y");
     return v;
 }
-function ValidateMapMetadata(v) {
-    if (typeof v.goals !== "object") throw new ValidationError("missing v.goals");
-    return v;
-}
-function ValidateMapGoal(v) {
-    if (v.from === undefined) throw new ValidationError("missing v.from");
-    ValidatePosition(v.from);
-    if (v.to === undefined) throw new ValidationError("missing v.to");
-    ValidatePosition(v.to);
-    return v;
-}
 function ValidateScore(v) {
     if (typeof v.username !== "string") throw new ValidationError("missing v.username");
     if (v.time === undefined) throw new ValidationError("missing v.time");
@@ -87,7 +76,6 @@ function ValidateMapDataEvent(v) {
     if (typeof v.d.level !== "number") throw new ValidationError("missing v.d.level");
     if (v.d.map === undefined) throw new ValidationError("missing v.d.map");
     if (v.d.metadata === undefined) throw new ValidationError("missing v.d.metadata");
-    ValidateMapMetadata(v.d.metadata);
     return v;
 }
 function ValidateVictoryEvent(v) {
@@ -147,8 +135,6 @@ function ValidateMoveCommand(v) {
 export { ValidationError as ValidationError };
 export { ValidatePosition as ValidatePosition };
 export { ValidateVelocity as ValidateVelocity };
-export { ValidateMapMetadata as ValidateMapMetadata };
-export { ValidateMapGoal as ValidateMapGoal };
 export { ValidateScore as ValidateScore };
 export { ValidateEvent as ValidateEvent };
 export { ValidateHelloEvent as ValidateHelloEvent };

@@ -2,7 +2,7 @@ import * as map from "/public/js/common/map.js";
 
 export class Session {
     state;
-    maps; // Map<int, map.Data>
+    maps; // Map<int, map.Map>
 
     constructor() {
         this.state = {};
@@ -21,7 +21,7 @@ export class Session {
                 break;
             }
             case "MAP_DATA": {
-                const m = new map.Data(ev.d.map, ev.d.metadata);
+                const m = new map.Map(ev.d.map, ev.d.metadata);
                 this.maps.set(ev.d.level, m);
                 break;
             }
