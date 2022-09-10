@@ -21,6 +21,7 @@ export class Session {
                 server.send({
                     type: "HELLO",
                     d: {
+                        username: this.username,
                         nLevels: levels.All.length,
                         completedLevels: [],
                     },

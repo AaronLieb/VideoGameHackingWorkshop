@@ -163,6 +163,7 @@ export type Event =
 export type HelloEvent = {
     readonly type: "HELLO";
     d: {
+        username: string;
         nLevels: number;
         completedLevels: number[];
     };
