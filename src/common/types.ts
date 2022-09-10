@@ -4,6 +4,9 @@ export type Millisecond = number;
 export const TickRate = 15;
 export const TickDuration: Millisecond = 1000 / TickRate;
 
+// UnixMilli is the Unix timestamp in milliseconds.
+export type UnixMilli = number;
+
 // Position is a pair of coordinates.
 export type Position = {
     x: number;
@@ -100,7 +103,7 @@ export type BlockTextures = {
 // whether the object ID is under metadata.blocks or metadata.entities.
 export enum BlockType {
     Block,
-    EntityBlock,
+    Entity,
 }
 
 // BlockModifier is any modifier that a block can have within a map.
@@ -122,7 +125,7 @@ export type RawMap = string;
 // MapMetadata is the metadata of a map.
 export type MapMetadata = {
     blocks: Record<Block, AssetID | BlockTextures>;
-    entities: Record<Block, AssetID | BlockTextures>;
+    entities: Record<Block, AssetID>;
     blockMods: Record<Block, BlockModifier[]>;
     attributes: Record<string, unknown>;
 };
@@ -151,7 +154,7 @@ export type Event =
     | WarningEvent
     | MapDataEvent
     | VictoryEvent
-    | CorrectionEvent
+    | EntityMoveEvent
     | { type: "_open" }
     | { type: "_close"; code: number };
 
@@ -190,18 +193,31 @@ export type VictoryEvent = {
     readonly type: "VICTORY";
     d: {
         level: number;
-        time: number; // millisecond
+        time: Millisecond; // millisecond
     };
 };
 
-// CorrectionEvent requests the client to correct the player's position. If the
-// client does not follow that, then the server is allowed to terminate the
-// client's connection.
-export type CorrectionEvent = {
-    readonly type: "CORRECTION";
+// EntityPositionData describes a position of an entity. The entity is
+// identified by its initial position on the map.
+export type EntityPositionData = {
+    // initial position is the entity's initial position on the map. Refer to
+    // map.Map's methods for additional helpers.
+    readonly initial: Position;
+    // position is the new position of the entity.
+    position: Position;
+};
+
+// EntityMoveEvent is an event that's sent by the server on potentially every
+// tick. The server may or may not send the event if there's nothing to be
+// updated.
+//
+// The client is advised to linear-interpolate (lerp) the entities when it
+// receives the event. This prevents entities from jittering on the screen.
+export type EntityMoveEvent = {
+    readonly type: "ENTITY_MOVE";
     d: {
-        position?: Position;
-        velocity?: Velocity;
+        level: number;
+        entities: EntityPositionData[];
     };
 };
 
@@ -226,9 +242,17 @@ export type JoinCommand = {
     };
 };
 
-// MoveCommand is the command to be sent on every movement. The client should
-// send this command as often as it needs to, which could be on every movement
-// or every duration (such as 16.67ms or 60Hz).
+// MoveCommand is the command to be sent on every player movement. The client
+// should send this command as often as it needs to, which could be on every
+// movement or every duration (such as 16.67ms or 60Hz). However, the server may
+// not process the movement until it ticks, which is every TickDuration defined
+// above.
+//
+// It is also worth noting that the client can ONLY directly control the
+// player's movement, and that will be the only entity that it can directly
+// control. Other entities are controlled by the server and will be calculated
+// appropriately. As such, there's no need for this command to describe movement
+// of any other entity than the player.
 export type MoveCommand = {
     readonly type: "MOVE";
     d: {

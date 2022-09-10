@@ -1,4 +1,5 @@
-import { BlockPosition, MapMetadata } from "/src/common/types.ts";
+import { BlockPosition, MapMetadata, Position } from "/src/common/types.ts";
+import * as entity from "/src/common/entity.ts";
 import * as level from "/src/level.ts";
 import * as map from "/src/common/map.ts";
 
@@ -7,7 +8,7 @@ const rawMap = `
                                 LLLLLLLL
                                 LLLLLLLLL
                                   LLLLL
-                                   WW                       g
+                    B              WW                       g
                                    WW                       g
         P                          WW                       G
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -57,15 +58,14 @@ const metadata: MapMetadata = {
         "g": "",
     },
     entities: {
-        "P": "player[1-4]", // handle this in the engine
+        "P": "player", // handle this in the engine
+        "B": "ball",
     },
     blockMods: {
         "G": ["air", "goal", "fixed"],
         "g": ["air", "goal"],
     },
-    attributes: {
-        n_jumps: 3,
-    },
+    attributes: {},
 };
 
 const levelMap = new map.Map(rawMap, metadata);
@@ -73,5 +73,7 @@ const levelMap = new map.Map(rawMap, metadata);
 export class Level extends level.Level {
     constructor(s: level.Session) {
         super(s, levelMap, 1);
+        this.initializeEntity("P", (pos: Position) => new entity.Player("P", pos));
+        this.initializeEntity("B", (pos: Position) => new entity.PhysicsEntity("B", pos, 0.5));
     }
 }

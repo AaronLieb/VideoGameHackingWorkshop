@@ -54,8 +54,8 @@ export function ValidateEvent(v: any): t.Event {
             ValidateVictoryEvent(v);
             break;
         }
-        case "CORRECTION": {
-            ValidateCorrectionEvent(v);
+        case "ENTITY_MOVE": {
+            ValidateEntityMoveEvent(v);
             break;
         }
         case undefined: {
@@ -108,24 +108,31 @@ export function ValidateVictoryEvent(v: any): t.VictoryEvent {
     if (v.type !== "VICTORY") throw new ValidationError("missing v.type");
     if (v.d === undefined) throw new ValidationError("missing v.d");
     if (typeof v.d.level !== "number") throw new ValidationError("missing v.d.level");
-    if (typeof v.d.time !== "number") throw new ValidationError("missing v.d.time");
+    if (v.d.time === undefined) throw new ValidationError("missing v.d.time");
 
     return v as t.VictoryEvent;
 }
 
-// ValidateCorrectionEvent validates the needed type constraints
-// from v and cast it to CorrectionEvent.
-export function ValidateCorrectionEvent(v: any): t.CorrectionEvent {
-    if (v.type !== "CORRECTION") throw new ValidationError("missing v.type");
-    if (v.d === undefined) throw new ValidationError("missing v.d");
-    if (!(v.d.position === undefined)) {
-        ValidatePosition(v.d.position);
-    }
-    if (!(v.d.velocity === undefined)) {
-        ValidateVelocity(v.d.velocity);
-    }
+// ValidateEntityPositionData validates the needed type constraints
+// from v and cast it to EntityPositionData.
+export function ValidateEntityPositionData(v: any): t.EntityPositionData {
+    if (v.initial === undefined) throw new ValidationError("missing v.initial");
+    ValidatePosition(v.initial);
+    if (v.position === undefined) throw new ValidationError("missing v.position");
+    ValidatePosition(v.position);
 
-    return v as t.CorrectionEvent;
+    return v as t.EntityPositionData;
+}
+
+// ValidateEntityMoveEvent validates the needed type constraints
+// from v and cast it to EntityMoveEvent.
+export function ValidateEntityMoveEvent(v: any): t.EntityMoveEvent {
+    if (v.type !== "ENTITY_MOVE") throw new ValidationError("missing v.type");
+    if (v.d === undefined) throw new ValidationError("missing v.d");
+    if (typeof v.d.level !== "number") throw new ValidationError("missing v.d.level");
+    if (typeof v.d.entities !== "object") throw new ValidationError("missing v.d.entities");
+
+    return v as t.EntityMoveEvent;
 }
 
 // ValidateCommand validates the needed type constraints

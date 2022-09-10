@@ -70,7 +70,7 @@ export class Map {
             case BlockType.Block:
                 assetID = this.metadata.blocks[block];
                 break;
-            case BlockType.EntityBlock:
+            case BlockType.Entity:
                 assetID = this.metadata.entities[block];
                 break;
             default:
@@ -107,20 +107,20 @@ export class Map {
     }
 
     blockPosition(pos: Position, block: Block): BlockPosition {
-        return this.blockPositionXY(pos.x, pos.y, block);
+        return this.blockPositionXY(pos, block);
     }
 
-    blockPositionXY(x: number, y: number, block: Block): BlockPosition {
+    blockPositionXY(pos: Position, block: Block): BlockPosition {
         const w = this.width;
         const h = this.height;
 
         let position = BlockPosition.Floating;
         // These checks may seem counter-intuitive, but it makes sense. If we
         // have the same block on the left, then we must be on the right, etc.
-        if (x >= w || this.lines[y][x + 1] == block) position |= BlockPosition.Left;
-        if (x <= 0 || this.lines[y][x - 1] == block) position |= BlockPosition.Right;
-        if (y >= h || this.lines[y + 1][x] == block) position |= BlockPosition.Top;
-        if (y <= 0 || this.lines[y - 1][x] == block) position |= BlockPosition.Bottom;
+        if (pos.x >= w || this.lines[pos.y][pos.x + 1] == block) position |= BlockPosition.Left;
+        if (pos.x <= 0 || this.lines[pos.y][pos.x - 1] == block) position |= BlockPosition.Right;
+        if (pos.y >= h || this.lines[pos.y + 1][pos.x] == block) position |= BlockPosition.Top;
+        if (pos.y <= 0 || this.lines[pos.y - 1][pos.x] == block) position |= BlockPosition.Bottom;
 
         return position;
     }
@@ -152,7 +152,7 @@ export class Map {
     // precalculations to ensure that iterations can be done slightly faster
     // than regularly calling map.at().
     iterate(
-        fn: (x: number, y: number, asset: AssetID, mods: BlockModifier[]) => void,
+        fn: (pos: Position, block: Block, asset: AssetID, mods: BlockModifier[]) => void,
         blockType = BlockType.Block,
         x = 0,
         y = 0,
@@ -165,7 +165,7 @@ export class Map {
             case BlockType.Block:
                 blocks = this.metadata.blocks;
                 break;
-            case BlockType.EntityBlock:
+            case BlockType.Entity:
                 blocks = this.metadata.entities;
                 break;
             default:
@@ -185,11 +185,35 @@ export class Map {
         for (let y = y1; y < y2; y++) {
             const line = this.lines[y];
             for (let x = x1; x < x2; x++) {
+                const pos = { x, y };
                 const block = line[x];
-                const position = this.blockPositionXY(x, y, block);
+                const position = this.blockPositionXY(pos, block);
                 const asset = this.blockAsset(block, position, blockType);
                 const mods = blockAttributes[block];
-                fn(x, y, asset, mods);
+                fn(pos, block, asset, mods);
+            }
+        }
+    }
+
+    iterateEntities(
+        fn: (pos: Position, block: Block, asset: AssetID, mods: BlockModifier[]) => void,
+    ) {
+        for (const block in this.metadata.entities) {
+            this.iterateEntity(block, fn);
+        }
+    }
+
+    iterateEntity(
+        block: Block,
+        fn: (pos: Position, block: Block, asset: AssetID, mods: BlockModifier[]) => void,
+    ) {
+        const asset = this.blockAsset(block, BlockPosition.Floating, BlockType.Entity);
+        const mods = this.blockAttributes(block);
+
+        for (let y = 0; y < this.height; y++) {
+            const line = this.lines[y];
+            for (let x = line.indexOf(block, 0); x != -1; x = line.indexOf(block, x + 1)) {
+                fn({ x, y }, block, asset, mods);
             }
         }
     }

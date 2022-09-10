@@ -1,4 +1,5 @@
-import { Command } from "/src/common/types.ts";
+import { Block, Command, Position, TickDuration } from "/src/common/types.ts";
+import * as entity from "/src/common/entity.ts";
 import * as map from "/src/common/map.ts";
 import * as ws from "/src/ws.ts";
 
@@ -13,17 +14,32 @@ export class Level {
     readonly startsAt: number;
     readonly session: Session;
 
+    entities = new Map<Position, entity.Entity>();
+
     private wonAt: number | undefined;
+    private tickID: number | undefined;
 
     constructor(s: Session, map: map.Map, level: number) {
         this.map = map;
         this.level = level;
-        this.startsAt = Date.now();
         this.session = s;
+        this.startsAt = Date.now();
+        this.tickID = setInterval(this.tick, TickDuration);
     }
 
     destroy() {
-        // reserved for future use
+        if (this.tickID) {
+            clearInterval(this.tickID);
+            this.tickID = undefined;
+        }
+    }
+
+    // initializeEntity initializes all entities with the given block. newFn is
+    // called as the entity constructor for each entity.
+    initializeEntity(block: Block, newFn: (pos: Position) => entity.Entity) {
+        this.map.iterateEntity(block, (pos: Position) => {
+            this.entities.set(pos, newFn(pos));
+        });
     }
 
     handleCommand(server: ws.Server, cmd: Command) {
@@ -48,6 +64,12 @@ export class Level {
 
                 break;
             }
+        }
+    }
+
+    tick() {
+        for (const [_, ent] of this.entities) {
+            ent.tick();
         }
     }
 }

@@ -32,6 +32,7 @@ export class PositionValidator {
     readonly allowedBlocks: Set<Block>;
 
     private violations = 0;
+    // TODO: move this out
     private lastPositions: Position[] = [];
     private timeoutHandle: number | null = null;
 
