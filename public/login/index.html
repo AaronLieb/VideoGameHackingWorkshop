@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="/public/css/styles.css" />
+<title>Login — Video Game Hacking Workshop</title>
+
+<main id="login-page">
+  <h1>Login</h1>
+  <form action="/api/auth" method="post" enctype="multipart/form-data">
+    <fieldset>
+      <label for="username">
+        <span>What's your username?</span>
+        <br />
+        <small>Feel free to choose anything, but keep it appropriate and recognizable!</small>
+      </label>
+      <input type="text" id="username" name="username" placeholder="aarolieb" />
+    </fieldset>
+    <fieldset>
+      <button type="submit">Go!</button>
+    </fieldset>
+  </form>
+</main>
