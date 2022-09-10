@@ -1,4 +1,12 @@
 import * as map from "/public/js/common/map.js";
+import * as ws from "/public/js/common/wsclient.js";
+
+export function Connect(url = "ws:///api/ws") {
+    const socket = new WebSocket(url);
+    const session = new Session();
+    const wrapped = new ws.Client(socket, session);
+    return wrapped;
+}
 
 export class Session {
     state;
