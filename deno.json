@@ -34,7 +34,9 @@
     "generateValidator": [
         "src/common/types.ts"
     ],
-    "sharedSourceDirs": {
-        "./src/common": "./public/js/common"
+    "bundle": {
+        "sharedSourceDirs": {
+            "./src/common": "./public/js/common"
+        }
     }
 }
