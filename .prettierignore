@@ -1,0 +1,8 @@
+# Covered by Deno:
+# https://deno.land/manual@v1.25.2/tools/formatter
+*.js
+*.ts
+*.md
+*.markdown
+*.json
+*.jsonc

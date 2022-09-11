@@ -74,6 +74,7 @@ export function ValidateEvent(v: any): t.Event {
 export function ValidateHelloEvent(v: any): t.HelloEvent {
     if (v.type !== "HELLO") throw new ValidationError("missing v.type");
     if (v.d === undefined) throw new ValidationError("missing v.d");
+    if (typeof v.d.username !== "string") throw new ValidationError("missing v.d.username");
     if (typeof v.d.nLevels !== "number") throw new ValidationError("missing v.d.nLevels");
     if (typeof v.d.completedLevels !== "object") throw new ValidationError("missing v.d.completedLevels");
 
