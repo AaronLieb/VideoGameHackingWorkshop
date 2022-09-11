@@ -46,10 +46,6 @@ export function ValidateEvent(v: any): t.Event {
             ValidateWarningEvent(v);
             break;
         }
-        case "MAP_DATA": {
-            ValidateMapDataEvent(v);
-            break;
-        }
         case "VICTORY": {
             ValidateVictoryEvent(v);
             break;
@@ -89,18 +85,6 @@ export function ValidateWarningEvent(v: any): t.WarningEvent {
     if (typeof v.d.message !== "string") throw new ValidationError("missing v.d.message");
 
     return v as t.WarningEvent;
-}
-
-// ValidateMapDataEvent validates the needed type constraints
-// from v and cast it to MapDataEvent.
-export function ValidateMapDataEvent(v: any): t.MapDataEvent {
-    if (v.type !== "MAP_DATA") throw new ValidationError("missing v.type");
-    if (v.d === undefined) throw new ValidationError("missing v.d");
-    if (typeof v.d.level !== "number") throw new ValidationError("missing v.d.level");
-    if (v.d.map === undefined) throw new ValidationError("missing v.d.map");
-    if (v.d.metadata === undefined) throw new ValidationError("missing v.d.metadata");
-
-    return v as t.MapDataEvent;
 }
 
 // ValidateVictoryEvent validates the needed type constraints

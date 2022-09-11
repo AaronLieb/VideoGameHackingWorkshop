@@ -152,7 +152,6 @@ export type Score = {
 export type Event =
     | HelloEvent
     | WarningEvent
-    | MapDataEvent
     | VictoryEvent
     | EntityMoveEvent
     | { type: "_open" }
@@ -174,18 +173,6 @@ export type WarningEvent = {
     readonly type: "WARNING";
     d: {
         message: string;
-    };
-};
-
-// MapDataEvent returns the data of the map requested using the `JOIN` command.
-// The server is permitted to send MAP_DATA even when the client hasn't
-// requested it, and the client should handle that.
-export type MapDataEvent = {
-    readonly type: "MAP_DATA";
-    d: {
-        level: number;
-        map: RawMap;
-        metadata: MapMetadata;
     };
 };
 
@@ -230,11 +217,7 @@ export type Command =
     | { type: "_open" }
     | { type: "_close"; code: number };
 
-// JoinCommand requests to the server that the client is joining a new map. The
-// server must eventually respond with the following events:
-//
-//    - MAP_DATA
-//
+// JoinCommand requests to the server that the client is joining a new map.
 export type JoinCommand = {
     readonly type: "JOIN";
     d: {
