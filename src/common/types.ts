@@ -152,7 +152,8 @@ export type Score = {
 export type Event =
     | HelloEvent
     | WarningEvent
-    | VictoryEvent
+    | LevelJoinedEvent
+    | LevelFinishedEvent
     | EntityMoveEvent
     | { type: "_open" }
     | { type: "_close"; code: number };
@@ -176,12 +177,21 @@ export type WarningEvent = {
     };
 };
 
-// VictoryEvent is sent when the player wins a game.
-export type VictoryEvent = {
-    readonly type: "VICTORY";
+// LevelJoinedEvent is sent when the server has acknowledged a JoinCommand.
+export type LevelJoinedEvent = {
+    readonly type: "LEVEL_JOINED";
     d: {
         level: number;
-        time: Millisecond; // millisecond
+    };
+};
+
+// VictoryEvent is sent when the player finishes a level.
+export type LevelFinishedEvent = {
+    readonly type: "LEVEL_FINISHED";
+    d: {
+        level: number;
+        won: boolean;
+        time: Millisecond;
     };
 };
 

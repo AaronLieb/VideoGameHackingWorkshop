@@ -46,15 +46,12 @@ export class Session {
                     throw `unknown level ${cmd.d.level}`;
                 }
 
-                const level = newLevel(this);
-                this.currentLevel = level;
+                this.currentLevel = newLevel(this);
 
                 server.send({
-                    type: "MAP_DATA",
+                    type: "LEVEL_JOINED",
                     d: {
-                        level: cmd.d.level,
-                        map: level.map.raw,
-                        metadata: level.map.metadata,
+                        level: this.currentLevel.level,
                     },
                 });
                 break;

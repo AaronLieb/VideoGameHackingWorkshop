@@ -46,8 +46,8 @@ export function ValidateEvent(v: any): t.Event {
             ValidateWarningEvent(v);
             break;
         }
-        case "VICTORY": {
-            ValidateVictoryEvent(v);
+        case "LEVEL_FINISHED": {
+            ValidateLevelFinishedEvent(v);
             break;
         }
         case "ENTITY_MOVE": {
@@ -87,15 +87,26 @@ export function ValidateWarningEvent(v: any): t.WarningEvent {
     return v as t.WarningEvent;
 }
 
-// ValidateVictoryEvent validates the needed type constraints
-// from v and cast it to VictoryEvent.
-export function ValidateVictoryEvent(v: any): t.VictoryEvent {
-    if (v.type !== "VICTORY") throw new ValidationError("missing v.type");
+// ValidateLevelJoinedEvent validates the needed type constraints
+// from v and cast it to LevelJoinedEvent.
+export function ValidateLevelJoinedEvent(v: any): t.LevelJoinedEvent {
+    if (v.type !== "LEVEL_JOINED") throw new ValidationError("missing v.type");
     if (v.d === undefined) throw new ValidationError("missing v.d");
     if (typeof v.d.level !== "number") throw new ValidationError("missing v.d.level");
+
+    return v as t.LevelJoinedEvent;
+}
+
+// ValidateLevelFinishedEvent validates the needed type constraints
+// from v and cast it to LevelFinishedEvent.
+export function ValidateLevelFinishedEvent(v: any): t.LevelFinishedEvent {
+    if (v.type !== "LEVEL_FINISHED") throw new ValidationError("missing v.type");
+    if (v.d === undefined) throw new ValidationError("missing v.d");
+    if (typeof v.d.level !== "number") throw new ValidationError("missing v.d.level");
+    if (typeof v.d.won !== "boolean") throw new ValidationError("missing v.d.won");
     if (v.d.time === undefined) throw new ValidationError("missing v.d.time");
 
-    return v as t.VictoryEvent;
+    return v as t.LevelFinishedEvent;
 }
 
 // ValidateEntityPositionData validates the needed type constraints

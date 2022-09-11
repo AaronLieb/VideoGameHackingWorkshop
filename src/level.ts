@@ -42,34 +42,7 @@ export class Level {
         });
     }
 
-    handleCommand(server: ws.Server, cmd: Command) {
-        switch (cmd.type) {
-            case "MOVE": {
-                if (!this.wonAt) {
-                    const pos = cmd.d.position;
-                    if (this.map.withinGoal(pos)) {
-                        this.wonAt = Date.now();
-                        const time = this.wonAt - this.startsAt;
+    handleCommand(_server: ws.Server, _cmd: Command) {}
 
-                        this.session.setScore(this.level, time);
-                        server.send({
-                            type: "VICTORY",
-                            d: {
-                                level: this.level,
-                                time: time,
-                            },
-                        });
-                    }
-                }
-
-                break;
-            }
-        }
-    }
-
-    tick() {
-        for (const [_, ent] of this.entities) {
-            ent.tick();
-        }
-    }
+    tick() {}
 }
