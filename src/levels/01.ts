@@ -9,6 +9,6 @@ export class Level extends level.Level {
     constructor(s: level.Session) {
         super(s, level1.Map, 1);
         this.initializeEntity("P", (pos: Position) => new entity.Player("P", pos));
-        this.initializeEntity("B", (pos: Position) => new entity.PhysicsEntity("B", pos, 0.5));
+        this.initializeEntity("B", (pos: Position) => new entity.Entity("B", pos));
     }
 }
