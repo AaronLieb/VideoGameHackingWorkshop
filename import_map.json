@@ -1,6 +1,7 @@
 {
     "imports": {
         "/src/": "./src/",
-        "/public/": "./public/"
+        "/public/": "./public/",
+        "/public/js/common/": "./src/common/"
     }
 }
