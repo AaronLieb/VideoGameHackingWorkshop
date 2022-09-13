@@ -1,5 +1,6 @@
 import * as map from "/public/js/common/map.js";
 import * as ws from "/public/js/common/wsclient.js";
+import { app } from "/public/js/render.js";
 
 export class NotLoggedInError extends Error {
     constructor() {
@@ -67,7 +68,16 @@ export class Session {
                 this.username = ev.d.username;
                 this.state.nLevels = ev.d.nLevels;
                 this.state.completedLevels = ev.d.completedLevels;
+                ws.send({ type: "JOIN", d: { level: 1 } });
                 break;
+            }
+            case "LEVEL_JOINED": {
+                this.level = new Level(this.maps);
+                this.player = new Player(this.level);
+
+                app.ticker.add((delta) => {
+                    this.level.loop(delta);
+                });
             }
             case "WARNING": {
                 alert(ev.d.message);

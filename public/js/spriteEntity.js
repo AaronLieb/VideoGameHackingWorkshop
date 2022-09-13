@@ -2,7 +2,7 @@ import { Entity } from "/public/js/common/entity.js";
 import { app } from "/public/js/render.js";
 
 export class SpriteEntity extends Entity {
-    constructor(block, initialPos, sprite) {
+    constructor(level, block, initialPos, sprite) {
         super(block, initialPos);
         this.sprite = sprite;
         Object.defineProperty(this.sprite, "x", {
@@ -16,5 +16,6 @@ export class SpriteEntity extends Entity {
             },
         });
         app.stage.addChild(this.sprite);
+        level.sprites.push(this);
     }
 }

@@ -1,4 +1,4 @@
-import { Block, Command, Vector, TickDuration } from "/src/common/types.ts";
+import { Block, Command, TickDuration, Vector } from "/src/common/types.ts";
 import * as entity from "/src/common/entity.ts";
 import * as map from "/src/common/map.ts";
 import * as ws from "/src/ws.ts";

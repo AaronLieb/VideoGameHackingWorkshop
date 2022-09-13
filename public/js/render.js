@@ -1,4 +1,4 @@
-const CANVAS_SIZE = { x: 640, y: 400 }
+const CANVAS_SIZE = { x: 640, y: 400 };
 
 export let app;
 

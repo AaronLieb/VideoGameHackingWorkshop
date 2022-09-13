@@ -8,8 +8,8 @@ import {
     BlockTextures,
     BlockType,
     MapMetadata,
-    Vector,
     RawMap,
+    Vector,
 } from "/src/common/types.ts";
 
 export const NoTextureID: AssetID = "notexture";
