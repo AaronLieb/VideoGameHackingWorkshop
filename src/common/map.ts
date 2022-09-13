@@ -21,8 +21,8 @@ export function AssetPath(id: AssetID): AssetPath {
     return "/public/assets/" + id + ".png";
 }
 
-// Map describes an entire map.
-export class Map {
+// LevelMap describes an entire map of a level.
+export class LevelMap {
     readonly lines: string[];
     readonly raw: RawMap;
     readonly goals: Block[];
@@ -208,7 +208,7 @@ export class Map {
         fn: (pos: Vector, block: Block, asset: AssetID, mods: BlockModifier[]) => void,
     ) {
         const asset = this.blockAsset(block, BlockPosition.Floating, BlockType.Entity);
-        const mods = this.blockAttributes[block];
+        const mods = this.blockAttributes(block);
 
         for (let y = 0; y < this.height; y++) {
             const line = this.lines[y];

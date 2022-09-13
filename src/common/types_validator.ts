@@ -16,15 +16,6 @@ export function validateVector(v: any): t.Vector {
     return v as t.Vector;
 }
 
-// validateScore validates the needed type constraints
-// from v and cast it to Score.
-export function validateScore(v: any): t.Score {
-    if (typeof v.username !== "string") throw new ValidationError("missing v.username");
-    if (v.time === undefined) throw new ValidationError("missing v.time");
-
-    return v as t.Score;
-}
-
 // validateEvent validates the needed type constraints
 // from v and cast it to Event.
 export function validateEvent(v: any): t.Event {
@@ -45,6 +36,14 @@ export function validateEvent(v: any): t.Event {
             validateLevelFinishedEvent(v);
             break;
         }
+        case "PERSONAL_SCORES": {
+            validatePersonalScoresEvent(v);
+            break;
+        }
+        case "LEADERBOARD_UPDATE": {
+            validateLeaderboardUpdateEvent(v);
+            break;
+        }
         case "ENTITY_MOVE": {
             validateEntityMoveEvent(v);
             break;
@@ -60,14 +59,21 @@ export function validateEvent(v: any): t.Event {
     return v as t.Event;
 }
 
+// validateLevelInfo validates the needed type constraints
+// from v and cast it to LevelInfo.
+export function validateLevelInfo(v: any): t.LevelInfo {
+    if (typeof v.number !== "number") throw new ValidationError("missing v.number");
+
+    return v as t.LevelInfo;
+}
+
 // validateHelloEvent validates the needed type constraints
 // from v and cast it to HelloEvent.
 export function validateHelloEvent(v: any): t.HelloEvent {
     if (v.type !== "HELLO") throw new ValidationError("missing v.type");
     if (v.d === undefined) throw new ValidationError("missing v.d");
     if (typeof v.d.username !== "string") throw new ValidationError("missing v.d.username");
-    if (typeof v.d.nLevels !== "number") throw new ValidationError("missing v.d.nLevels");
-    if (typeof v.d.completedLevels !== "object") throw new ValidationError("missing v.d.completedLevels");
+    if (typeof v.d.levels !== "object") throw new ValidationError("missing v.d.levels");
 
     return v as t.HelloEvent;
 }
@@ -88,6 +94,10 @@ export function validateLevelJoinedEvent(v: any): t.LevelJoinedEvent {
     if (v.type !== "LEVEL_JOINED") throw new ValidationError("missing v.type");
     if (v.d === undefined) throw new ValidationError("missing v.d");
     if (typeof v.d.level !== "number") throw new ValidationError("missing v.d.level");
+    if (v.d.info === undefined) throw new ValidationError("missing v.d.info");
+    validateLevelInfo(v.d.info);
+    if (v.d.raw === undefined) throw new ValidationError("missing v.d.raw");
+    if (v.d.metadata === undefined) throw new ValidationError("missing v.d.metadata");
 
     return v as t.LevelJoinedEvent;
 }
@@ -102,6 +112,52 @@ export function validateLevelFinishedEvent(v: any): t.LevelFinishedEvent {
     if (v.d.time === undefined) throw new ValidationError("missing v.d.time");
 
     return v as t.LevelFinishedEvent;
+}
+
+// validatePersonalScoresEvent validates the needed type constraints
+// from v and cast it to PersonalScoresEvent.
+export function validatePersonalScoresEvent(v: any): t.PersonalScoresEvent {
+    if (v.type !== "PERSONAL_SCORES") throw new ValidationError("missing v.type");
+    if (typeof v.d !== "object") throw new ValidationError("missing v.d");
+
+    return v as t.PersonalScoresEvent;
+}
+
+// validatePersonalScore validates the needed type constraints
+// from v and cast it to PersonalScore.
+export function validatePersonalScore(v: any): t.PersonalScore {
+    if (typeof v.level !== "number") throw new ValidationError("missing v.level");
+    if (v.your_best === undefined) throw new ValidationError("missing v.your_best");
+    if (v.global_best === undefined) throw new ValidationError("missing v.global_best");
+
+    return v as t.PersonalScore;
+}
+
+// validateLeaderboardUpdateEvent validates the needed type constraints
+// from v and cast it to LeaderboardUpdateEvent.
+export function validateLeaderboardUpdateEvent(v: any): t.LeaderboardUpdateEvent {
+    if (v.type !== "LEADERBOARD_UPDATE") throw new ValidationError("missing v.type");
+    if (v.d === undefined) throw new ValidationError("missing v.d");
+
+    return v as t.LeaderboardUpdateEvent;
+}
+
+// validateLevelLeaderboard validates the needed type constraints
+// from v and cast it to LevelLeaderboard.
+export function validateLevelLeaderboard(v: any): t.LevelLeaderboard {
+    if (typeof v.level !== "number") throw new ValidationError("missing v.level");
+    if (typeof v.scores !== "object") throw new ValidationError("missing v.scores");
+
+    return v as t.LevelLeaderboard;
+}
+
+// validateLevelScore validates the needed type constraints
+// from v and cast it to LevelScore.
+export function validateLevelScore(v: any): t.LevelScore {
+    if (typeof v.username !== "string") throw new ValidationError("missing v.username");
+    if (v.bestTime === undefined) throw new ValidationError("missing v.bestTime");
+
+    return v as t.LevelScore;
 }
 
 // validateEntityPositionData validates the needed type constraints

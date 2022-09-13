@@ -1,13 +1,13 @@
 import { Entity } from "/src/common/entity.ts";
 import { BlockModifier, Vector } from "/src/common/types.ts";
-import { Map } from "/src/common/map.ts";
+import { LevelMap } from "/src/common/map.ts";
 
 export const GRAVITY = 0.3;
 
 export class Engine {
     readonly GRAVITY: number = 0.3;
 
-    tickEntity(entity: Entity, map: Map, deltaTime: number) {
+    tickEntity(entity: Entity, map: LevelMap, deltaTime: number) {
         const isGrounded = this.checkGrounded(entity, map);
         if (isGrounded) {
             entity.velocity.y = 0;
@@ -20,7 +20,7 @@ export class Engine {
         entity.tick();
     }
 
-    checkGrounded(entity: Entity, map: Map) {
+    checkGrounded(entity: Entity, map: LevelMap) {
         let isGrounded = false;
         map.iterate((pos: Vector, _, __, mods: BlockModifier[]) => {
             if (!mods.includes("air") && pos.y - entity.position.y < 1) {

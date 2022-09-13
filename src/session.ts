@@ -7,24 +7,32 @@ import * as levels from "/src/levels/levels.ts";
 export class Session {
     readonly store: store.Storer;
     readonly username: string;
+    readonly wsPool: ws.ServerPool;
 
     private currentLevel: level.Level | undefined;
 
-    constructor(store: store.Storer, username: string) {
-        this.store = store;
+    constructor(username: string, d: {
+        store: store.Storer;
+        wsPool: ws.ServerPool;
+    }) {
         this.username = username;
+        this.store = d.store;
+        this.wsPool = d.wsPool;
     }
 
     handleCommand(server: ws.Server, cmd: Command) {
-        console.log(cmd)
+        console.log(cmd);
         switch (cmd.type) {
             case "_open": {
                 server.send({
                     type: "HELLO",
                     d: {
                         username: this.username,
-                        nLevels: levels.All.length,
-                        completedLevels: [],
+                        levels: levels.Levels.map((level) => ({
+                            number: level.number,
+                            name: level.levelName,
+                            desc: level.levelDesc,
+                        })),
                     },
                 });
                 break;
@@ -42,18 +50,24 @@ export class Session {
                     this.currentLevel = undefined;
                 }
 
-                const newLevel = levels.All[cmd.d.level - 1];
-                if (!newLevel) {
+                const level = levels.Levels[cmd.d.level - 1];
+                if (!level) {
                     throw `unknown level ${cmd.d.level}`;
                 }
 
-                this.currentLevel = newLevel(this);
+                this.currentLevel = new level(this);
 
                 server.send({
                     type: "LEVEL_JOINED",
                     d: {
-                        level: this.currentLevel.level,
-                        map: this.currentLevel.map
+                        level: level.number,
+                        info: {
+                            number: level.number,
+                            name: level.levelName,
+                            desc: level.levelDesc,
+                        },
+                        raw: level.map.raw,
+                        metadata: level.map.metadata,
                     },
                 });
                 break;
@@ -66,9 +80,17 @@ export class Session {
     }
 
     async setScore(level: number, time: number) {
-        await this.store.setScore(level, {
+        const newHiscore = await this.store.setScore(level, {
             username: this.username,
-            time: time,
+            bestTime: time,
         });
+
+        if (newHiscore) {
+            const leaderboard = await this.store.leaderboard(level);
+            this.wsPool.emit({
+                type: "LEADERBOARD_UPDATE",
+                d: [leaderboard],
+            });
+        }
     }
 }

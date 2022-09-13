@@ -8,8 +8,8 @@ export function AssetPath(id) {
     }
     return "/public/assets/" + id + ".png";
 }
-// Map describes an entire map.
-export class Map {
+// LevelMap describes an entire map of a level.
+export class LevelMap {
     constructor(raw, metadata) {
         if (metadata.blocks["background"] === undefined) {
             metadata.blocks["background"] = "";
@@ -159,7 +159,7 @@ export class Map {
     }
     iterateEntity(block, fn) {
         const asset = this.blockAsset(block, BlockPosition.Floating, BlockType.Entity);
-        const mods = this.blockAttributes[block];
+        const mods = this.blockAttributes(block);
         for (let y = 0; y < this.height; y++) {
             const line = this.lines[y];
             for (let x = line.indexOf(block, 0); x != -1; x = line.indexOf(block, x + 1)) {

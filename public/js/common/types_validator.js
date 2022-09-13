@@ -13,17 +13,6 @@ export function validateVector(v) {
     }
     return v;
 }
-// validateScore validates the needed type constraints
-// from v and cast it to Score.
-export function validateScore(v) {
-    if (typeof v.username !== "string") {
-        throw new ValidationError("missing v.username");
-    }
-    if (v.time === undefined) {
-        throw new ValidationError("missing v.time");
-    }
-    return v;
-}
 // validateEvent validates the needed type constraints
 // from v and cast it to Event.
 export function validateEvent(v) {
@@ -44,6 +33,14 @@ export function validateEvent(v) {
             validateLevelFinishedEvent(v);
             break;
         }
+        case "PERSONAL_SCORES": {
+            validatePersonalScoresEvent(v);
+            break;
+        }
+        case "LEADERBOARD_UPDATE": {
+            validateLeaderboardUpdateEvent(v);
+            break;
+        }
         case "ENTITY_MOVE": {
             validateEntityMoveEvent(v);
             break;
@@ -54,6 +51,14 @@ export function validateEvent(v) {
         default: {
             throw new ValidationError("unknown v.type given");
         }
+    }
+    return v;
+}
+// validateLevelInfo validates the needed type constraints
+// from v and cast it to LevelInfo.
+export function validateLevelInfo(v) {
+    if (typeof v.number !== "number") {
+        throw new ValidationError("missing v.number");
     }
     return v;
 }
@@ -69,11 +74,8 @@ export function validateHelloEvent(v) {
     if (typeof v.d.username !== "string") {
         throw new ValidationError("missing v.d.username");
     }
-    if (typeof v.d.nLevels !== "number") {
-        throw new ValidationError("missing v.d.nLevels");
-    }
-    if (typeof v.d.completedLevels !== "object") {
-        throw new ValidationError("missing v.d.completedLevels");
+    if (typeof v.d.levels !== "object") {
+        throw new ValidationError("missing v.d.levels");
     }
     return v;
 }
@@ -103,6 +105,16 @@ export function validateLevelJoinedEvent(v) {
     if (typeof v.d.level !== "number") {
         throw new ValidationError("missing v.d.level");
     }
+    if (v.d.info === undefined) {
+        throw new ValidationError("missing v.d.info");
+    }
+    validateLevelInfo(v.d.info);
+    if (v.d.raw === undefined) {
+        throw new ValidationError("missing v.d.raw");
+    }
+    if (v.d.metadata === undefined) {
+        throw new ValidationError("missing v.d.metadata");
+    }
     return v;
 }
 // validateLevelFinishedEvent validates the needed type constraints
@@ -122,6 +134,64 @@ export function validateLevelFinishedEvent(v) {
     }
     if (v.d.time === undefined) {
         throw new ValidationError("missing v.d.time");
+    }
+    return v;
+}
+// validatePersonalScoresEvent validates the needed type constraints
+// from v and cast it to PersonalScoresEvent.
+export function validatePersonalScoresEvent(v) {
+    if (v.type !== "PERSONAL_SCORES") {
+        throw new ValidationError("missing v.type");
+    }
+    if (typeof v.d !== "object") {
+        throw new ValidationError("missing v.d");
+    }
+    return v;
+}
+// validatePersonalScore validates the needed type constraints
+// from v and cast it to PersonalScore.
+export function validatePersonalScore(v) {
+    if (typeof v.level !== "number") {
+        throw new ValidationError("missing v.level");
+    }
+    if (v.your_best === undefined) {
+        throw new ValidationError("missing v.your_best");
+    }
+    if (v.global_best === undefined) {
+        throw new ValidationError("missing v.global_best");
+    }
+    return v;
+}
+// validateLeaderboardUpdateEvent validates the needed type constraints
+// from v and cast it to LeaderboardUpdateEvent.
+export function validateLeaderboardUpdateEvent(v) {
+    if (v.type !== "LEADERBOARD_UPDATE") {
+        throw new ValidationError("missing v.type");
+    }
+    if (v.d === undefined) {
+        throw new ValidationError("missing v.d");
+    }
+    return v;
+}
+// validateLevelLeaderboard validates the needed type constraints
+// from v and cast it to LevelLeaderboard.
+export function validateLevelLeaderboard(v) {
+    if (typeof v.level !== "number") {
+        throw new ValidationError("missing v.level");
+    }
+    if (typeof v.scores !== "object") {
+        throw new ValidationError("missing v.scores");
+    }
+    return v;
+}
+// validateLevelScore validates the needed type constraints
+// from v and cast it to LevelScore.
+export function validateLevelScore(v) {
+    if (typeof v.username !== "string") {
+        throw new ValidationError("missing v.username");
+    }
+    if (v.bestTime === undefined) {
+        throw new ValidationError("missing v.bestTime");
     }
     return v;
 }
