@@ -45,7 +45,7 @@ export class LevelMap {
 
         // Ensure that every single map line has a constant width.
         for (let i = 0; i < this.lines.length; i++) {
-            const missing = this.lines[i].length - this.width;
+            const missing = this.width - this.lines[i].length;
             if (missing > 0) {
                 this.lines[i] += " ".repeat(missing);
             }
@@ -63,7 +63,7 @@ export class LevelMap {
     }
 
     // block looks up the object data by a block.
-    blockAsset(block: Block, position = BlockPosition.Floating, type = BlockType.Block): AssetID {
+    blockAsset(block: Block, position = BlockPosition.Floating, type = BlockType.Block): AssetID | undefined {
         let assetID: AssetID | BlockTextures | undefined;
 
         switch (type) {
@@ -86,21 +86,23 @@ export class LevelMap {
             return assetID;
         }
 
+        return this.positionTexture(assetID, position) || NoTextureID;
+    }
+
+    // positionTexture returns the texture for the given position.
+    positionTexture(textures: BlockTextures, position = BlockPosition.Floating): AssetID | undefined {
         // Try and search for the exact position.
-        if (assetID[position] !== undefined) {
-            return assetID[position];
+        if (textures[position] !== undefined) {
+            return textures[position];
         }
 
         // Seek for the closest edge and use that texture instead. See the
         // BlockEdges array for more information.
         for (const edge of BlockEdges) {
-            if (position != edge && (position & edge) != 0 && edge && assetID[edge] !== undefined) {
-                return assetID[edge];
+            if (position != edge && (position & edge) != 0 && edge && textures[edge] !== undefined) {
+                return textures[edge];
             }
         }
-
-        // Fallback.
-        return NoTextureID;
     }
 
     blockPosition(pos: Vector, block: Block): BlockPosition {
@@ -132,13 +134,39 @@ export class LevelMap {
         return mods;
     }
 
+    // findBlock seeks for the first position with this block. Use this for
+    // blocks that are known to only appear once.
+    findBlock(block: Block, x = 0, y = 0, w = this.width, h = this.height): Vector | undefined {
+        const x1 = x;
+        const y1 = y;
+        const x2 = x + w;
+        const y2 = y + h;
+
+        for (let y = y1; y < y2; y++) {
+            const line = this.lines[y];
+            for (let x = x1; x < x2; x++) {
+                const pos = { x, y };
+                const current = line[x];
+                if (block == current) return pos;
+            }
+        }
+    }
+
+    // blockWithAsset finds the block with the given asset ID. This is useful
+    // for assets like "player".
+    entityWithAsset(asset: AssetID): Block | undefined {
+        for (const [block, assetID] of Object.entries(this.metadata.entities)) {
+            if (assetID == asset) return block;
+        }
+    }
+
     // at looks up a block's object by the coordinates.
     at(pos: Vector, type = BlockType.Block): AssetID {
         // Access Y first, X last. Y describes the line, while X is the offset
         // within that line.
         const block = this.lines[pos.y][pos.x];
         const position = this.blockPosition(pos, block);
-        return this.blockAsset(block, position, type);
+        return this.blockAsset(block, position, type) || NoTextureID;
     }
 
     // iterate calls fn on the given bounds of the map. The function does some
@@ -181,9 +209,17 @@ export class LevelMap {
                 const pos = { x, y };
                 const block = line[x];
                 const position = this.blockPosition(pos, block);
-                const asset = this.blockAsset(block, position, blockType);
+
+                let asset: AssetID | BlockTextures | undefined = blocks[block];
+                if (asset == undefined) {
+                    continue;
+                }
+                if (typeof asset != "string") {
+                    asset = this.positionTexture(asset, position);
+                }
+
                 const mods = [] || blockAttributes[block];
-                fn(pos, block, asset, mods);
+                fn(pos, block, asset as string, mods);
             }
         }
     }
@@ -196,11 +232,16 @@ export class LevelMap {
         }
     }
 
+    // iterateEntity iterates over the entire map for all entities with the
+    // given block. If the block is not defined, then this function does
+    // nothing.
     iterateEntity(
         block: Block,
         fn: (pos: Vector, block: Block, asset: AssetID, mods: BlockModifier[]) => void,
     ) {
         const asset = this.blockAsset(block, BlockPosition.Floating, BlockType.Entity);
+        if (!asset) return;
+
         const mods = this.blockAttributes(block);
 
         for (let y = 0; y < this.height; y++) {

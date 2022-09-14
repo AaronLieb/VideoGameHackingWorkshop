@@ -53,6 +53,7 @@ export class App {
     levels; // LevelInfo[]
     player; // Player
     hooks; // Set<(ws, ev) => void>
+    level; // Level | undefined
 
     gameElement;
     levelsElement; // TODO
@@ -61,6 +62,11 @@ export class App {
         this.hooks = new Set();
         this.gameElement = opts.gameElement;
         this.levelsElement = opts.levelsElement;
+
+        const resizer = new ResizeObserver(() => {
+            if (this.level) this.level.game.resizeToElem(this.gameElement);
+        });
+        resizer.observe(this.gameElement);
     }
 
     handleEvent(ws, ev) {
@@ -74,6 +80,8 @@ export class App {
             case "LEVEL_JOINED": {
                 const levelMap = new map.LevelMap(ev.d.raw, ev.d.metadata);
                 this.level = new Level(levelMap);
+                this.level.game.resizeTo = this.gameElement;
+                this.level.game.resizeToElem();
                 this.gameElement.appendChild(this.level.game.view);
                 break;
             }

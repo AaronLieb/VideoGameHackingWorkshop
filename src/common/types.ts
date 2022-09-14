@@ -124,7 +124,7 @@ export type MapMetadata = {
 
 // AssetID is the ID of an asset. Assets are global, meaning all maps share the
 // same set of assets.
-export type AssetID = string;
+export type AssetID = string | "player";
 
 // AssetPath is a path to an asset.
 export type AssetPath = string;

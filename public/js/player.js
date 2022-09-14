@@ -1,6 +1,5 @@
-import { createSprite } from "/public/js/game.js";
 import { Keyboard } from "/public/js/keyboard.js";
-import { SpriteEntity } from "/public/js/spriteEntity.js";
+import { SpriteEntity, SpriteFromAsset } from "/public/js/spriteEntity.js";
 
 function playerMove(delta) {
     if (Keyboard.space) this.velocity.y = -2;
@@ -9,8 +8,15 @@ function playerMove(delta) {
     if (Keyboard.a) this.velocity.x = -1;
 }
 
+const playerAssets = [
+    "player1",
+    "player2",
+    "player3",
+    "player4",
+];
+
 export class Player extends SpriteEntity {
-    constructor() {
-        super("player", { x: 0, y: 0 }, createSprite("/public/assets/image.png"));
+    constructor(pos) {
+        super("player", pos, SpriteFromAsset(playerAssets[0]));
     }
 }

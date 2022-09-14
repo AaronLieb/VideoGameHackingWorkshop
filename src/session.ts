@@ -21,7 +21,6 @@ export class Session {
     }
 
     handleCommand(server: ws.Server, cmd: Command) {
-        console.log(cmd);
         switch (cmd.type) {
             case "_open": {
                 server.send({

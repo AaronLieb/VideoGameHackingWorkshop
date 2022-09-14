@@ -4,13 +4,14 @@ import * as entity from "/src/common/entity.ts";
 import * as map from "/src/common/map.ts";
 
 const rawMap = `
-                                  LLLL
-                                LLLLLLLL
-                                LLLLLLLLL
-                                  LLLLL
-                    B              WW                       g
-                                   WW                       g
-        P                          WW                       G
+
+            LLLL                          
+          LLLLLLLL                        
+          LLLLLLLLL                       
+            LLLLL                         
+        B    WW                                             g
+             WW                                             g
+   P         WW                                             G
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

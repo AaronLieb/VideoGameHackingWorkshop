@@ -20,16 +20,20 @@ export class Level {
         this.entities = [];
         this.sprites = [];
 
-        this.player = new Player();
-        this.addSprite(this.player);
-
-        this.map.iterate((pos, _, assetId) => {
-            const sprite = SpriteFromAsset(assetId);
+        this.map.iterate((pos, _, assetID) => {
+            const sprite = SpriteFromAsset(assetID);
             sprite.x = pos.x * BlockSize;
             sprite.y = pos.y * BlockSize;
 
             this.sprites.push(sprite);
             this.game.stage.addChild(sprite);
+        });
+
+        this.map.iterateEntities((pos, _block, assetID) => {
+            if (assetID == "player") {
+                this.player = new Player(pos);
+                this.addSprite(this.player);
+            }
         });
 
         this.game.ticker.add((delta) => this.loop(delta));

@@ -40,6 +40,7 @@ body > footer {
   /* https://caniuse.com/mdn-css_properties_aspect-ratio */
   aspect-ratio: 16 / 10;
   width: 100%;
+  overflow: hidden;
   background-color: black;
 }
 
