@@ -3,8 +3,8 @@ import * as entity from "/src/common/entity.ts";
 import * as level from "/src/level.ts";
 import * as map from "/src/common/map.ts";
 
-export const RawMap = `
-                                  LLLL
+export const RawMap =
+`                                  LLLL
                                 LLLLLLLL
                                 LLLLLLLLL
                                   LLLLL

@@ -1,3 +1,6 @@
+import * as map from "/src/common/map.ts";
+
+
 // Millisecond duration type.
 export type Millisecond = number;
 
@@ -177,6 +180,7 @@ export type LevelJoinedEvent = {
     readonly type: "LEVEL_JOINED";
     d: {
         level: number;
+        map: map.Map;
     };
 };
 

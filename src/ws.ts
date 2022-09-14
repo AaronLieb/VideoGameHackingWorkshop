@@ -28,7 +28,7 @@ export class Server extends ws.ExtendedWebSocket {
             onMessage: (data: unknown) => {
                 let cmd: Command;
                 try {
-                    cmd = validator.ValidateCommand(data);
+                    cmd = validator.validateCommand(data);
                 } catch (err) {
                     this.closeWithError(`${err}`, 1002);
                     return;

@@ -16,6 +16,7 @@ export class Session {
     }
 
     handleCommand(server: ws.Server, cmd: Command) {
+        console.log(cmd)
         switch (cmd.type) {
             case "_open": {
                 server.send({
@@ -41,7 +42,7 @@ export class Session {
                     this.currentLevel = undefined;
                 }
 
-                const newLevel = levels.All[cmd.d.level];
+                const newLevel = levels.All[cmd.d.level - 1];
                 if (!newLevel) {
                     throw `unknown level ${cmd.d.level}`;
                 }
@@ -52,6 +53,7 @@ export class Session {
                     type: "LEVEL_JOINED",
                     d: {
                         level: this.currentLevel.level,
+                        map: this.currentLevel.map
                     },
                 });
                 break;
