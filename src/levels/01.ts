@@ -66,7 +66,10 @@ const metadata: MapMetadata = {
         "G": ["air", "goal", "fixed"],
         "g": ["air", "goal"],
     },
-    attributes: {},
+    backgrounds: [
+        { asset: "bg1", mode: "tiled" },
+        { asset: "bg2", mode: "tiled" },
+    ],
 };
 
 export class Level extends level.Level {
