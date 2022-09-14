@@ -31,19 +31,21 @@ export class LevelMap {
     readonly height: number;
 
     constructor(raw: RawMap, metadata: MapMetadata) {
-        if (metadata.blocks["background"] === undefined) {
-            metadata.blocks["background"] = "";
+        if (metadata.blocks[" "] === undefined) {
+            metadata.blocks[" "] = BlankTextureID;
         }
 
-        let width = 0;
-        for (const line of raw) {
-            width = Math.max(width, line.length);
+        this.lines = raw.split("\n");
+        this.height = this.lines.length;
+
+        this.width = 0;
+        for (const line of this.lines) {
+            this.width = Math.max(this.width, line.length);
         }
 
         // Ensure that every single map line has a constant width.
-        this.lines = raw.split("\n");
         for (let i = 0; i < this.lines.length; i++) {
-            const missing = this.lines[i].length - width;
+            const missing = this.lines[i].length - this.width;
             if (missing > 0) {
                 this.lines[i] += " ".repeat(missing);
             }
@@ -58,8 +60,6 @@ export class LevelMap {
 
         this.raw = this.lines.join("\n");
         this.metadata = metadata;
-        this.width = width;
-        this.height = this.lines.length;
     }
 
     // block looks up the object data by a block.
@@ -78,9 +78,6 @@ export class LevelMap {
         }
 
         if (assetID === undefined) {
-            if (block === "background") {
-                return BlankTextureID;
-            }
             return NoTextureID;
         }
 
@@ -107,20 +104,16 @@ export class LevelMap {
     }
 
     blockPosition(pos: Vector, block: Block): BlockPosition {
-        return this.blockPositionXY(pos, block);
-    }
-
-    blockPositionXY(pos: Vector, block: Block): BlockPosition {
-        const w = this.width;
-        const h = this.height;
+        const w = this.width - 1;
+        const h = this.height - 1;
 
         let position = BlockPosition.Floating;
         // These checks may seem counter-intuitive, but it makes sense. If we
         // have the same block on the left, then we must be on the right, etc.
-        if (pos.x >= w && this.lines[pos.y][pos.x + 1] == block) position |= BlockPosition.Left;
-        if (pos.x < 0 && this.lines[pos.y][pos.x - 1] == block) position |= BlockPosition.Right;
-        if (pos.y >= h && this.lines[pos.y + 1][pos.x] == block) position |= BlockPosition.Top;
-        if (pos.y < 0 && this.lines[pos.y - 1][pos.x] == block) position |= BlockPosition.Bottom;
+        if (pos.x >= w || this.lines[pos.y][pos.x + 1] == block) position |= BlockPosition.Left;
+        if (pos.x <= 0 || this.lines[pos.y][pos.x - 1] == block) position |= BlockPosition.Right;
+        if (pos.y >= h || this.lines[pos.y + 1][pos.x] == block) position |= BlockPosition.Top;
+        if (pos.y <= 0 || this.lines[pos.y - 1][pos.x] == block) position |= BlockPosition.Bottom;
 
         return position;
     }
@@ -132,7 +125,7 @@ export class LevelMap {
             mods = this.metadata.blockMods[block] || [];
         }
 
-        if (block == "background" && !mods.includes("air")) {
+        if (block == " " && !mods.includes("air")) {
             mods = mods.slice();
             mods.push("air");
         }
@@ -187,7 +180,7 @@ export class LevelMap {
             for (let x = x1; x < x2; x++) {
                 const pos = { x, y };
                 const block = line[x];
-                const position = this.blockPositionXY(pos, block);
+                const position = this.blockPosition(pos, block);
                 const asset = this.blockAsset(block, position, blockType);
                 const mods = [] || blockAttributes[block];
                 fn(pos, block, asset, mods);

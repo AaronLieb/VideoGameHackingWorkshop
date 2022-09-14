@@ -16,16 +16,13 @@ export type Vector = {
 
 // Block describes a single character in a map that corresponds to the
 // declared objects in its metadata.
-//
-// All blanks or space characters will be of the "background" block. Map
-// metadata must have this block defined.
-export type Block = string | "background";
+export type Block = string | " ";
 
 // BlockSize is the size of one block in pixels. One unit of Position in either
-// axis will equal to one block, which should be 16 pixels. The pixels do not
+// axis will equal to one block, which should be 32 pixels. The pixels do not
 // have to correspond to physical pixels, but all textures should be mapped to
-// be about 1:1 and treated as a 16x16 texture.
-export const BlockSize = 16;
+// be about 1:1 and treated as a 32x32 texture.
+export const BlockSize = 32;
 
 // BlockPosition forms all the possible positions of a block within itself.
 //
@@ -103,14 +100,14 @@ export enum BlockType {
 
 // BlockModifier is any modifier that a block can have within a map.
 export type BlockModifier =
-    // air lets the player pass through the block. Block "background"
-    // automatically have this modifier.
+    // air lets the player pass through the block. Block " " automatically have
+    // this modifier.
     | "air"
     // goal turns all regions of the block into one goal. Use this in
     // combination with air or the player won't be able to hit the goal.
     | "goal"
     // fixed forces the renderer to render this object at a fixed position by
-    // stretching the texture into the regions covered by 16x16 blocks.
+    // stretching the texture into the regions covered by 32x32 blocks.
     | "fixed";
 
 // RawMap is the entire map described as an array of map lines. The length of

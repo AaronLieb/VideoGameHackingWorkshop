@@ -17,14 +17,13 @@ const keyUpHandler = (e) => {
     event.preventDefault();
 };
 
-export let Keyboard = {
-    initializeListeners: () => {
-        window.addEventListener("keydown", keyDownHandler.bind(this), false);
-        window.addEventListener("keyup", keyUpHandler.bind(this), false);
-    },
+export const Keyboard = {
     w: false,
     a: false,
     s: false,
     d: false,
     space: false,
 };
+
+self.addEventListener("keydown", keyDownHandler.bind(this), false);
+self.addEventListener("keyup", keyUpHandler.bind(this), false);

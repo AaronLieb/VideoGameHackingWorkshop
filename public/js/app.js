@@ -1,7 +1,5 @@
 import * as map from "/public/js/common/map.js";
 import * as ws from "/public/js/common/wsclient.js";
-import { app } from "/public/js/render.js";
-import { Player } from "/public/js/player.js";
 import { Level } from "/public/js/level.js";
 
 export class NotLoggedInError extends Error {
@@ -10,9 +8,7 @@ export class NotLoggedInError extends Error {
     }
 }
 
-// Connect ensures that the user is authorized then returns a new Session that's
-// connected to the Websocket.
-export async function Connect() {
+export async function Start(opts) {
     // Check if we're authenticated.
     const auth = await fetch("/api/auth");
     if (auth.status != 200) {
@@ -22,7 +18,7 @@ export async function Connect() {
     const host = location.host;
     if (!host) throw "missing location.lost";
 
-    const session = new Session();
+    const session = new App(opts);
 
     // waitHello blocks until either we get a HELLO event or the Websocket
     // unexpectedly closes.
@@ -52,45 +48,42 @@ export async function Connect() {
     return session;
 }
 
-export class Session {
+export class App {
     username;
-    state;
+    levels; // LevelInfo[]
+    player; // Player
     hooks; // Set<(ws, ev) => void>
-    maps; // Map<int, map.Map>
 
-    constructor() {
-        this.state = {};
+    gameElement;
+    levelsElement; // TODO
+
+    constructor(opts) {
         this.hooks = new Set();
-        this.maps = new Map();
+        this.gameElement = opts.gameElement;
+        this.levelsElement = opts.levelsElement;
     }
 
     handleEvent(ws, ev) {
         switch (ev.type) {
             case "HELLO": {
                 this.username = ev.d.username;
-                this.state.nLevels = ev.d.nLevels;
-                this.state.completedLevels = ev.d.completedLevels;
+                this.levels = ev.d.levels;
                 ws.send({ type: "JOIN", d: { level: 1 } });
                 break;
             }
             case "LEVEL_JOINED": {
-                const m = new map.Map(ev.d.map.raw, ev.d.map.metadata);
-                this.maps.set(ev.d.level, m);
-                this.level = new Level(m);
-                this.player = new Player(this.level);
-
-                app.ticker.add((delta) => {
-                    this.level.loop(delta);
-                });
+                const levelMap = new map.LevelMap(ev.d.raw, ev.d.metadata);
+                this.level = new Level(levelMap);
+                this.gameElement.appendChild(this.level.game.view);
+                break;
+            }
+            case "LEVEL_FINISHED": {
+                this.gameElement.removeChild(this.level.game.view);
+                this.level = undefined;
                 break;
             }
             case "WARNING": {
                 alert(ev.d.message);
-                break;
-            }
-            case "MAP_DATA": {
-                const m = new map.Map(ev.d.map, ev.d.metadata);
-                this.maps.set(this.level.level, m);
                 break;
             }
             case "VICTORY": {

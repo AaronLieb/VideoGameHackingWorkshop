@@ -1,10 +1,10 @@
 export const TickRate = 15;
 export const TickDuration = 1000 / TickRate;
 // BlockSize is the size of one block in pixels. One unit of Position in either
-// axis will equal to one block, which should be 16 pixels. The pixels do not
+// axis will equal to one block, which should be 32 pixels. The pixels do not
 // have to correspond to physical pixels, but all textures should be mapped to
-// be about 1:1 and treated as a 16x16 texture.
-export const BlockSize = 16;
+// be about 1:1 and treated as a 32x32 texture.
+export const BlockSize = 32;
 // BlockPosition forms all the possible positions of a block within itself.
 //
 // To demonstrate its purposes, here's how it works. Suppose we have the

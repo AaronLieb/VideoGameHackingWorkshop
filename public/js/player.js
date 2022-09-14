@@ -1,4 +1,4 @@
-import { app, createSprite } from "/public/js/render.js";
+import { createSprite } from "/public/js/game.js";
 import { Keyboard } from "/public/js/keyboard.js";
 import { SpriteEntity } from "/public/js/spriteEntity.js";
 
@@ -10,7 +10,7 @@ function playerMove(delta) {
 }
 
 export class Player extends SpriteEntity {
-    constructor(level) {
-        super(level, "player", { x: 0, y: 0 }, createSprite("/public/assets/image.png"));
+    constructor() {
+        super("player", { x: 0, y: 0 }, createSprite("/public/assets/image.png"));
     }
 }

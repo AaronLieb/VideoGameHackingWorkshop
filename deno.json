@@ -2,8 +2,9 @@
     "compilerOptions": {},
     "importMap": "import_map.json",
     "tasks": {
-        "serve": "deno run --allow-env --allow-net --allow-read --allow-write --allow-run src/main.ts",
+        "serve": "deno run ./public/js/deps.js && deno run --allow-env --allow-net --allow-read --allow-write --allow-run src/main.ts",
         "bundle": "deno run --allow-run --allow-read --allow-write --allow-env scripts/bundle.js",
+		"generate": "deno task generate_validator && deno task bundle",
         "generate_validator": "deno run --allow-run --allow-read --allow-write scripts/generate_validator.js"
     },
     "lint": {

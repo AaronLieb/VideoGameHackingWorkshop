@@ -14,7 +14,7 @@ const rawMap = `
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^`.slice(1);
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^`;
 
 const metadata: MapMetadata = {
     blocks: {
@@ -46,7 +46,7 @@ const metadata: MapMetadata = {
             [BlockPosition.Floating]: "grassf",
             [BlockPosition.Top]: "grass",
             [BlockPosition.TopLeft]: "grassl",
-            [BlockPosition.TopRight]: "glassr",
+            [BlockPosition.TopRight]: "grassr",
             [BlockPosition.Middle]: "dirt",
             [BlockPosition.Left]: "dirtl",
             [BlockPosition.Right]: "dirtr",
