@@ -18,12 +18,13 @@ export class Level {
     static readonly levelDesc: string | undefined;
 
     protected entities = new Map<Vector, entity.Entity>();
+    protected player: entity.Entity = entity.Null;
     protected map: map.LevelMap | undefined;
 
     private ws: ws.Server = ws.Noop;
     private wonAt: Millisecond | undefined;
-    private startsAt: Millisecond;
     private tickID: number | undefined;
+    private readonly startsAt: Millisecond;
 
     constructor(readonly session: Session) {
         this.startsAt = Date.now();
@@ -40,8 +41,13 @@ export class Level {
     // initializeEntity initializes all entities with the given block. newFn is
     // called as the entity constructor for each entity.
     protected initializeEntity(block: Block, newFn: (pos: Vector) => entity.Entity) {
-        this.map?.iterateEntity(block, (pos: Vector) => {
-            this.entities.set(pos, newFn(pos));
+        this.map?.iterateEntity(block, (pos: Vector, assetID: string) => {
+            const ent = newFn(pos);
+            this.entities.set(pos, ent);
+
+            if (assetID == "player") {
+                this.player = ent;
+            }
         });
     }
 
@@ -57,11 +63,13 @@ export class Level {
     handleCommand(server: ws.Server, cmd: Command) {
         switch (cmd.type) {
             case "_open":
-                this.startsAt = Date.now();
                 this.ws = server;
                 break;
             case "_close":
                 this.ws = ws.Noop;
+                break;
+            case "MOVE":
+                this.player.position = cmd.d.position;
                 break;
         }
     }

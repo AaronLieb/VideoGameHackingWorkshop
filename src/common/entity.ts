@@ -19,6 +19,8 @@ export class Entity {
     tick() {}
 }
 
+export const Null = new Entity(" ", { x: -1, y: -1 });
+
 // Player is a player entity.
 export class Player extends Entity {
     constructor(block: Block, pos: Vector) {
