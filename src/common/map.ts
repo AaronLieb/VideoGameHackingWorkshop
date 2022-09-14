@@ -255,7 +255,8 @@ export class LevelMap {
     // attribute looks up any attribute from the metadata attribute this. The
     // user should cast the returned value to another known type.
     attribute(key: string): unknown {
-        return this.metadata.attributes[key];
+        if (this.metadata.attributes) return this.metadata.attributes[key];
+        return undefined;
     }
 
     // withinGoal returns true if the given pair of coordinates is within any
