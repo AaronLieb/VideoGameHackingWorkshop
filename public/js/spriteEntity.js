@@ -16,6 +16,7 @@ export class SpriteEntity extends Entity {
             },
         });
         app.stage.addChild(this.sprite);
+        level.entities.push(this);
         level.sprites.push(this);
     }
 }

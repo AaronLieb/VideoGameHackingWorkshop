@@ -18,4 +18,6 @@ const ses = await session.Connect()
         throw err;
     });
 
+window.session = ses;
+
 console.log(`logged in as ${ses.username}`);

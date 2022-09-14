@@ -35,7 +35,7 @@ export class Map {
         this.raw = this.lines.join("\n");
         this.metadata = metadata;
         this.width = width;
-        this.height = raw.length;
+        this.height = this.lines.length;
     }
     // block looks up the object data by a block.
     blockAsset(block, position = BlockPosition.Floating, type = BlockType.Block) {
@@ -83,16 +83,16 @@ export class Map {
         let position = BlockPosition.Floating;
         // These checks may seem counter-intuitive, but it makes sense. If we
         // have the same block on the left, then we must be on the right, etc.
-        if (pos.x >= w || this.lines[pos.y][pos.x + 1] == block) {
+        if (pos.x >= w && this.lines[pos.y][pos.x + 1] == block) {
             position |= BlockPosition.Left;
         }
-        if (pos.x <= 0 || this.lines[pos.y][pos.x - 1] == block) {
+        if (pos.x < 0 && this.lines[pos.y][pos.x - 1] == block) {
             position |= BlockPosition.Right;
         }
-        if (pos.y >= h || this.lines[pos.y + 1][pos.x] == block) {
+        if (pos.y >= h && this.lines[pos.y + 1][pos.x] == block) {
             position |= BlockPosition.Top;
         }
-        if (pos.y <= 0 || this.lines[pos.y - 1][pos.x] == block) {
+        if (pos.y < 0 && this.lines[pos.y - 1][pos.x] == block) {
             position |= BlockPosition.Bottom;
         }
         return position;
@@ -147,7 +147,7 @@ export class Map {
                 const block = line[x];
                 const position = this.blockPositionXY(pos, block);
                 const asset = this.blockAsset(block, position, blockType);
-                const mods = blockAttributes[block];
+                const mods = [] || blockAttributes[block];
                 fn(pos, block, asset, mods);
             }
         }
@@ -159,7 +159,7 @@ export class Map {
     }
     iterateEntity(block, fn) {
         const asset = this.blockAsset(block, BlockPosition.Floating, BlockType.Entity);
-        const mods = this.blockAttributes(block);
+        const mods = this.blockAttributes[block];
         for (let y = 0; y < this.height; y++) {
             const line = this.lines[y];
             for (let x = line.indexOf(block, 0); x != -1; x = line.indexOf(block, x + 1)) {

@@ -1,6 +1,8 @@
 import * as map from "/public/js/common/map.js";
 import * as ws from "/public/js/common/wsclient.js";
 import { app } from "/public/js/render.js";
+import { Player } from "/public/js/player.js";
+import { Level } from "/public/js/level.js";
 
 export class NotLoggedInError extends Error {
     constructor() {
@@ -72,12 +74,15 @@ export class Session {
                 break;
             }
             case "LEVEL_JOINED": {
-                this.level = new Level(this.maps);
+                const m = new map.Map(ev.d.map.raw, ev.d.map.metadata);
+                this.maps.set(ev.d.level, m);
+                this.level = new Level(m);
                 this.player = new Player(this.level);
 
                 app.ticker.add((delta) => {
                     this.level.loop(delta);
                 });
+                break;
             }
             case "WARNING": {
                 alert(ev.d.message);
@@ -85,7 +90,7 @@ export class Session {
             }
             case "MAP_DATA": {
                 const m = new map.Map(ev.d.map, ev.d.metadata);
-                this.maps.set(ev.d.level, m);
+                this.maps.set(this.level.level, m);
                 break;
             }
             case "VICTORY": {
@@ -97,13 +102,5 @@ export class Session {
         for (const fn of this.hooks) {
             fn(ws, ev);
         }
-    }
-}
-
-export class Level {
-    map;
-
-    constructor(map) {
-        this.map = map;
     }
 }
