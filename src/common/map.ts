@@ -21,6 +21,9 @@ export function AssetPath(id: AssetID): AssetPath {
     return "/public/assets/" + id + ".png";
 }
 
+const positionTopBottom = BlockPosition.Top | BlockPosition.Bottom;
+const positionLeftRight = BlockPosition.Left | BlockPosition.Right;
+
 // LevelMap describes an entire map of a level.
 export class LevelMap {
     readonly lines: string[];
@@ -109,13 +112,20 @@ export class LevelMap {
         const w = this.width - 1;
         const h = this.height - 1;
 
-        let position = BlockPosition.Floating;
+        let position = BlockPosition.Middle;
         // These checks may seem counter-intuitive, but it makes sense. If we
         // have the same block on the left, then we must be on the right, etc.
-        if (pos.x >= w || this.lines[pos.y][pos.x + 1] == block) position |= BlockPosition.Left;
-        if (pos.x <= 0 || this.lines[pos.y][pos.x - 1] == block) position |= BlockPosition.Right;
-        if (pos.y >= h || this.lines[pos.y + 1][pos.x] == block) position |= BlockPosition.Top;
-        if (pos.y <= 0 || this.lines[pos.y - 1][pos.x] == block) position |= BlockPosition.Bottom;
+        if (pos.x < w && this.lines[pos.y][pos.x + 1] != block) position &= ~BlockPosition.Left;
+        if (pos.x > 0 && this.lines[pos.y][pos.x - 1] != block) position &= ~BlockPosition.Right;
+        if (pos.y < h && this.lines[pos.y + 1][pos.x] != block) position &= ~BlockPosition.Top;
+        if (pos.y > 0 && this.lines[pos.y - 1][pos.x] != block) position &= ~BlockPosition.Bottom;
+
+        // Resolve conflicts when both Top and Bottom are true or both Left and
+        // Right are true. They should cancel out.
+        if (position != BlockPosition.Middle) {
+            if ((position & positionTopBottom) == positionTopBottom) position &= ~positionTopBottom;
+            if ((position & positionLeftRight) == positionLeftRight) position &= ~positionLeftRight;
+        }
 
         return position;
     }
@@ -206,12 +216,16 @@ export class LevelMap {
         for (let y = y1; y < y2; y++) {
             const line = this.lines[y];
             for (let x = x1; x < x2; x++) {
-                const pos = { x, y };
                 const block = line[x];
+                if (block == " ") {
+                    continue;
+                }
+
+                const pos = { x, y };
                 const position = this.blockPosition(pos, block);
 
                 let asset: AssetID | BlockTextures | undefined = blocks[block];
-                if (asset == undefined) {
+                if (asset === undefined || asset === "") {
                     continue;
                 }
                 if (typeof asset != "string") {
@@ -219,6 +233,7 @@ export class LevelMap {
                 }
 
                 const mods = [] || blockAttributes[block];
+
                 fn(pos, block, asset as string, mods);
             }
         }

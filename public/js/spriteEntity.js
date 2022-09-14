@@ -3,7 +3,7 @@ import { Entity } from "/public/js/common/entity.js";
 import { BlockSize } from "/public/js/common/types.js";
 import { AssetPath } from "/public/js/common/map.js";
 
-export function SpriteFromAsset(assetID, scale = true) {
+export function SpriteFromAsset(assetID, mods) {
     const path = AssetPath(assetID);
 
     let sprite;
@@ -11,16 +11,16 @@ export function SpriteFromAsset(assetID, scale = true) {
         sprite = PIXI.Sprite.from(PIXI.Texture.EMPTY);
     } else {
         sprite = PIXI.Sprite.from(path);
+        sprite.roundPixels = true;
 
-        if (scale) {
-            const onLoaded = () => {
+        if (!mods || !mods.include || !mods.include("fixed")) {
+            sprite.texture.baseTexture.scaleMode = PIXI.SCALE_MODES.NEAREST;
+            sprite.texture.baseTexture.mipmap = PIXI.MIPMAP_MODES.POW2;
+            sprite.texture.baseTexture.on("loaded", () => {
                 const wscale = BlockSize / sprite.texture.baseTexture.realWidth;
                 const hscale = BlockSize / sprite.texture.baseTexture.realHeight;
                 sprite.scale.set(wscale, hscale);
-                sprite.texture.baseTexture.removeListener("loaded", onLoaded);
-            };
-            sprite.texture.baseTexture.scaleMode = PIXI.NEAREST;
-            sprite.texture.baseTexture.on("loaded", onLoaded);
+            });
         }
     }
 

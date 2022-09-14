@@ -16,6 +16,17 @@ export function validateVector(v) {
     }
     return v;
 }
+// validateMapBackground validates the needed type constraints
+// from v and cast it to MapBackground.
+export function validateMapBackground(v) {
+    if (typeof v.asset !== "string") {
+        throw new ValidationError("missing v.asset");
+    }
+    if (v.mode === undefined) {
+        throw new ValidationError("missing v.mode");
+    }
+    return v;
+}
 // validateEvent validates the needed type constraints
 // from v and cast it to Event.
 export function validateEvent(v) {

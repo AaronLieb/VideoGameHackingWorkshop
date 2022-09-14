@@ -120,10 +120,13 @@ export type MapMetadata = {
     entities: Record<Block, AssetID>;
     blockMods: Record<Block, BlockModifier[]>;
     attributes?: Record<string, unknown>;
-    backgrounds?: {
-        asset: string;
-        mode: "tiled" | "stretch";
-    }[];
+    backgrounds?: MapBackground[];
+};
+
+// MapBackground describes a map's background layer.
+export type MapBackground = {
+    asset: string;
+    mode: "tiled" | "stretched" | "fixed";
 };
 
 // AssetID is the ID of an asset. Assets are global, meaning all maps share the

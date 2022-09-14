@@ -5,14 +5,14 @@ import * as map from "/src/common/map.ts";
 
 const rawMap = `
 
-            LLLL                          
-          LLLLLLLL                        
-          LLLLLLLLL                       
-            LLLLL                         
+             LLL                         
+            LLLLL                        
+           LLLLLL                        
+           LLLLLL                        
+            LLLL                         
         B    WW                                             g
              WW                                             g
-   P         WW                                             G
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   P    f    WW                                             G
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^`;
@@ -27,7 +27,7 @@ const metadata: MapMetadata = {
             [BlockPosition.Middle]: "leafm",
             [BlockPosition.Left]: "leafl",
             [BlockPosition.Right]: "leafr",
-            [BlockPosition.Bottom]: "leafb",
+            [BlockPosition.Bottom]: "woodtl",
             [BlockPosition.BottomLeft]: "leafbl",
             [BlockPosition.BottomRight]: "leafbr",
         },
@@ -35,13 +35,13 @@ const metadata: MapMetadata = {
             [BlockPosition.Floating]: "woodl",
             [BlockPosition.Top]: "woodl",
             [BlockPosition.TopLeft]: "woodl",
-            [BlockPosition.TopRight]: "woodr",
+            [BlockPosition.TopRight]: "woodl",
             [BlockPosition.Middle]: "woodl",
             [BlockPosition.Left]: "woodl",
-            [BlockPosition.Right]: "woodr",
+            [BlockPosition.Right]: "woodl",
             [BlockPosition.Bottom]: "woodl",
             [BlockPosition.BottomLeft]: "woodl",
-            [BlockPosition.BottomRight]: "woodr",
+            [BlockPosition.BottomRight]: "woodl",
         },
         "^": {
             [BlockPosition.Floating]: "grassf",
@@ -61,12 +61,14 @@ const metadata: MapMetadata = {
     entities: {
         "P": "player", // handle this in the engine
         "B": "ball",
+        "f": "frank",
     },
     blockMods: {
         "G": ["air", "goal", "fixed"],
         "g": ["air", "goal"],
     },
     backgrounds: [
+        { asset: "bg3", mode: "tiled" },
         { asset: "bg1", mode: "tiled" },
         { asset: "bg2", mode: "tiled" },
     ],

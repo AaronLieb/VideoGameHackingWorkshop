@@ -16,7 +16,7 @@ const playerAssets = [
 ];
 
 export class Player extends SpriteEntity {
-    constructor(pos) {
-        super("player", pos, SpriteFromAsset(playerAssets[0]));
+    constructor(block, pos) {
+        super(block, pos, SpriteFromAsset(playerAssets[0]));
     }
 }

@@ -36,6 +36,10 @@ body > footer {
   min-height: 100vh;
 }
 
+#game-page > h1 > sup {
+  top: 0;
+}
+
 #game {
   /* https://caniuse.com/mdn-css_properties_aspect-ratio */
   aspect-ratio: 16 / 10;
