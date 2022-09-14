@@ -1,5 +1,5 @@
 import * as execute from "https://deno.land/x/execute@v1.1.0/mod.ts";
-import * as fnv from "https://deno.land/std@0.105.0/hash/fnv.ts";
+import * as sha256 from "https://deno.land/std@0.105.0/hash/sha256.ts";
 import * as base64 from "https://deno.land/std@0.95.0/encoding/base64.ts";
 
 let hashedOutput = {};
@@ -83,19 +83,18 @@ async function bundleDirectory(src, dst, opts) {
         const srcCont = await Deno.readFile(srcPath);
         const srcHash = hashbytes(srcCont);
 
-        if (hashedOutput[srcPath] === srcHash) {
-            // console.log(srcPath, "is unmodified, skipping");
-            continue;
+        if (hashedOutput[srcPath] !== srcHash) {
+            changed = true;
+            break;
         }
 
         // Confirm that the file still exists.
         try {
             await Deno.stat(dstPath);
-            continue;
-        } catch (_) { /* changed */ }
-
-        changed = true;
-        break;
+        } catch (_) {
+            changed = true;
+            break;
+        }
     }
 
     if (!changed) {
@@ -190,9 +189,9 @@ ${dstr}
 }
 
 function hashbytes(data) {
-    const hasher = new fnv.Fnv64a();
-    hasher.write(data);
-    return base64.encode(hasher.sum());
+    const hasher = new sha256.Sha256();
+    hasher.update(data);
+    return base64.encode(hasher.arrayBuffer());
 }
 
 function paths(...parts) {
