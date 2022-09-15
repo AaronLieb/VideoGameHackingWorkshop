@@ -1,34 +1,47 @@
-import { Block, Command, LevelFinishedEvent, Millisecond, TickDuration, Vector } from "/src/common/types.ts";
+import {
+    Block,
+    BlockPosition,
+    BlockType,
+    Command,
+    LevelFinishedEvent,
+    Millisecond,
+    TickDuration,
+    Vector,
+} from "/src/common/types.ts";
+import * as physics from "/src/common/physics.ts";
+import * as session from "/src/session.ts";
 import * as entity from "/src/common/entity.ts";
 import * as map from "/src/common/map.ts";
 import * as ws from "/src/ws.ts";
 
-export interface Session {
-    setScore(level: number, time: number): Promise<void>;
+export interface Info {
+    readonly new: (s: session.Session) => Level;
+    readonly map: map.LevelMap;
+    readonly number: number;
+    readonly name: string | undefined;
+    readonly desc: string | undefined;
 }
 
 // Level describes a level with all its server logic.
 export class Level {
-    // These actually do nothing. They're supposed to be overridden by the
-    // children class. You have to do that. Also, none of these are accessible
-    // internally.
-    static readonly map: map.LevelMap;
-    static readonly number: number;
-    static readonly levelName: string | undefined;
-    static readonly levelDesc: string | undefined;
-
     protected entities = new Map<Vector, entity.Entity>();
+    protected physics: physics.Engine;
     protected player: entity.Entity = entity.Null;
-    protected map: map.LevelMap | undefined;
+    protected readonly map: map.LevelMap;
+    protected readonly number: number;
+    protected readonly session: session.Session;
 
-    private ws: ws.Server = ws.Noop;
     private wonAt: Millisecond | undefined;
     private tickID: number | undefined;
     private readonly startsAt: Millisecond;
 
-    constructor(readonly session: Session) {
+    protected constructor(info: Info, session: session.Session) {
+        this.map = info.map;
+        this.number = info.number;
+        this.session = session;
         this.startsAt = Date.now();
-        this.tickID = setInterval(this.tick, TickDuration);
+        this.physics = new physics.Engine(this.map);
+        this.tickID = setInterval(() => this.tick(), TickDuration);
     }
 
     destroy() {
@@ -40,19 +53,34 @@ export class Level {
 
     // initializeEntity initializes all entities with the given block. newFn is
     // called as the entity constructor for each entity.
-    protected initializeEntity(block: Block, newFn: (pos: Vector) => entity.Entity) {
-        this.map?.iterateEntity(block, (pos: Vector, assetID: string) => {
+    protected initializeEntity<T extends entity.Entity>(block: Block, newFn: (pos: Vector) => T): T[] {
+        const entities: T[] = [];
+
+        this.map.iterateEntity(block, (pos: Vector, assetID: string) => {
             const ent = newFn(pos);
+
             this.entities.set(pos, ent);
+            entities.push(ent);
 
             if (assetID == "player") {
                 this.player = ent;
             }
         });
+
+        return entities;
+    }
+
+    protected addEntity(entity: entity.Entity) {
+        this.entities.set(entity.initialPosition, entity);
+
+        const asset = this.map.blockAsset(entity.block, BlockPosition.Floating, BlockType.Entity);
+        if (asset == "player") {
+            this.player = entity;
+        }
     }
 
     protected sendFinished(cmd: LevelFinishedEvent) {
-        this.ws.send(cmd);
+        this.session.ws.send(cmd);
         this.session;
     }
 
@@ -60,19 +88,29 @@ export class Level {
         return this.startsAt;
     }
 
-    handleCommand(server: ws.Server, cmd: Command) {
+    handleCommand(_: ws.Server, cmd: Command) {
         switch (cmd.type) {
-            case "_open":
-                this.ws = server;
-                break;
-            case "_close":
-                this.ws = ws.Noop;
-                break;
             case "MOVE":
                 this.player.position = cmd.d.position;
                 break;
         }
     }
 
-    tick() {}
+    tick(deltaTime = 1) {
+        const diff = this.physics.tickEntities(this.entities, deltaTime);
+        if (diff.length > 0) {
+            const data = diff.map((entity) => ({
+                initialPosition: entity.initialPosition,
+                position: entity.position,
+            }));
+
+            this.session.ws.send({
+                type: "ENTITY_MOVE",
+                d: {
+                    level: this.number,
+                    entities: data,
+                },
+            });
+        }
+    }
 }

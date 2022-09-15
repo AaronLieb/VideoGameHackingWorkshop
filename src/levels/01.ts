@@ -1,5 +1,6 @@
 import { BlockPosition, MapMetadata, Vector } from "/src/common/types.ts";
 import * as level from "/src/level.ts";
+import * as session from "/src/session.ts";
 import * as entity from "/src/common/entity.ts";
 import * as map from "/src/common/map.ts";
 
@@ -8,7 +9,7 @@ const rawMap = `
              LLL                         
             LLLLL                        
            LLLLLL                        
-           LLLLLL                        
+   -       LLLLLL                        
             LLLL                         
         B    WW                                             g
              WW                                             g
@@ -62,6 +63,7 @@ const metadata: MapMetadata = {
         "P": "player", // handle this in the engine
         "B": "ball",
         "f": "frank",
+        "-": "grassf",
     },
     blockMods: {
         "G": ["air", "goal", "fixed"],
@@ -74,17 +76,47 @@ const metadata: MapMetadata = {
     ],
 };
 
+export const Info: level.Info = {
+    map: new map.LevelMap(rawMap, metadata),
+    number: 1,
+    name: "Basics",
+    desc: "",
+    new: (s: session.Session) => new Level(s),
+};
+
 export class Level extends level.Level {
-    static readonly map = new map.LevelMap(rawMap, metadata);
-    static readonly number = 1;
-    static readonly levelName = "Basics";
-    static readonly levelDesc = "";
+    platforms: platformEntity[];
 
-    constructor(readonly session: level.Session) {
-        super(session);
-        super.map = Level.map;
+    constructor(session: session.Session) {
+        super(Info, session);
 
-        this.initializeEntity("P", (pos: Vector) => new entity.Player("P", pos));
+        this.initializeEntity("P", (pos: Vector) => new entity.Entity("P", pos));
         this.initializeEntity("B", (pos: Vector) => new entity.Entity("B", pos));
+
+        this.platforms = this.initializeEntity("-", (pos: Vector) => new platformEntity("-", pos));
+    }
+}
+
+class platformEntity extends entity.Entity {
+    private mult = 1;
+    private endBound: Vector;
+
+    constructor(block: string, pos: Vector) {
+        super(block, pos);
+        this.endBound = {
+            x: pos.x + 5,
+            y: pos.y,
+        };
+    }
+
+    tick(delta = 1) {
+        if (this.position.x > this.endBound.x) {
+            this.mult = -1;
+        } else if (this.position.x < this.initialPosition.x) {
+            this.mult = 1;
+        }
+        this.position.x += 0.25 * this.mult * delta;
+
+        super.tick(delta);
     }
 }

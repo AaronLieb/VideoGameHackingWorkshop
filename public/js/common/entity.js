@@ -9,11 +9,6 @@ export class Entity {
         this.acceleration = { x: 0, y: 0 };
         this.initialPosition = pos;
     }
-    tick() {}
+    tick(_deltaTime = 1) {}
 }
-// Player is a player entity.
-export class Player extends Entity {
-    constructor(block, pos) {
-        super(block, pos);
-    }
-}
+export const Null = new Entity(" ", { x: -1, y: -1 });

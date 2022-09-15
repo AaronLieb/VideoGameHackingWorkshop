@@ -9,6 +9,8 @@ export class Session {
     readonly username: string;
     readonly wsPool: ws.ServerPool;
 
+    ws: ws.Server = ws.Noop;
+
     private currentLevel: level.Level | undefined;
 
     constructor(username: string, d: {
@@ -23,20 +25,22 @@ export class Session {
     handleCommand(server: ws.Server, cmd: Command) {
         switch (cmd.type) {
             case "_open": {
+                this.ws = server;
                 server.send({
                     type: "HELLO",
                     d: {
                         username: this.username,
-                        levels: levels.Levels.map((level) => ({
+                        levels: levels.Info.map((level) => ({
                             number: level.number,
-                            name: level.levelName,
-                            desc: level.levelDesc,
+                            name: level.name,
+                            desc: level.desc,
                         })),
                     },
                 });
                 break;
             }
             case "_close": {
+                this.ws = ws.Noop;
                 if (this.currentLevel) {
                     this.currentLevel.destroy();
                     this.currentLevel = undefined;
@@ -49,12 +53,12 @@ export class Session {
                     this.currentLevel = undefined;
                 }
 
-                const level = levels.Levels[cmd.d.level - 1];
+                const level = levels.Info[cmd.d.level - 1];
                 if (!level) {
                     throw `unknown level ${cmd.d.level}`;
                 }
 
-                this.currentLevel = new level(this);
+                this.currentLevel = level.new(this);
 
                 server.send({
                     type: "LEVEL_JOINED",
@@ -62,8 +66,8 @@ export class Session {
                         level: level.number,
                         info: {
                             number: level.number,
-                            name: level.levelName,
-                            desc: level.levelDesc,
+                            name: level.name,
+                            desc: level.desc,
                         },
                         raw: level.map.raw,
                         metadata: level.map.metadata,

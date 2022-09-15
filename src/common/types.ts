@@ -240,9 +240,9 @@ export type LevelScore = {
 // EntityPositionData describes a position of an entity. The entity is
 // identified by its initial position on the map.
 export type EntityPositionData = {
-    // initial position is the entity's initial position on the map. Refer to
+    // initialPosition is the entity's initial position on the map. Refer to
     // map.Map's methods for additional helpers.
-    readonly initial: Vector;
+    readonly initialPosition: Vector;
     // position is the new position of the entity.
     position: Vector;
 };

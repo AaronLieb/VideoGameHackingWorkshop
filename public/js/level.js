@@ -18,7 +18,7 @@ export class Level {
     constructor(map) {
         this.map = map;
         this.game = new Game();
-        this.engine = new Engine();
+        this.engine = new Engine(this.map);
 
         this.entities = [];
         this.sprites = [];

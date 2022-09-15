@@ -212,10 +212,10 @@ export function validateLevelScore(v) {
 // validateEntityPositionData validates the needed type constraints
 // from v and cast it to EntityPositionData.
 export function validateEntityPositionData(v) {
-    if (v.initial === undefined) {
-        throw new ValidationError("missing v.initial");
+    if (v.initialPosition === undefined) {
+        throw new ValidationError("missing v.initialPosition");
     }
-    validateVector(v.initial);
+    validateVector(v.initialPosition);
     if (v.position === undefined) {
         throw new ValidationError("missing v.position");
     }

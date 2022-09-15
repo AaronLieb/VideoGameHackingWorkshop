@@ -2,22 +2,39 @@ import { Entity } from "/src/common/entity.ts";
 import { BlockModifier, Vector } from "/src/common/types.ts";
 import { LevelMap } from "/src/common/map.ts";
 
-export const GRAVITY = 0.3;
-
 export class Engine {
-    readonly GRAVITY: number = 0.3;
+    readonly gravity = 0.3;
 
-    tickEntity(entity: Entity, map: LevelMap, deltaTime: number) {
-        const isGrounded = this.checkGrounded(entity, map);
+    constructor(readonly map: LevelMap) {}
+
+    tickEntities(entities: Map<Vector, Entity>, deltaTime = 0): Entity[] {
+        const updates = [];
+
+        for (const [_, entity] of entities) {
+            const pos = { ...entity.position }; // copy so tickEntity can mutate
+            this.tickEntity(entity, deltaTime);
+            if (pos.x != entity.position.x || pos.y != entity.position.y) {
+                updates.push(entity);
+            }
+        }
+
+        return updates;
+    }
+
+    tickEntity(entity: Entity, deltaTime = 1) {
+        const isGrounded = this.checkGrounded(entity, this.map);
         if (isGrounded) {
             entity.velocity.y = 0;
             entity.acceleration.y = 0;
         }
+
         entity.velocity.x += entity.acceleration.x * deltaTime;
         entity.velocity.y += entity.acceleration.y * deltaTime;
+
+        entity.tick(deltaTime);
+
         entity.position.x += entity.velocity.x * deltaTime;
         entity.position.y += entity.velocity.y * deltaTime;
-        entity.tick();
     }
 
     checkGrounded(entity: Entity, map: LevelMap) {

@@ -172,8 +172,8 @@ export function validateLevelScore(v: any): t.LevelScore {
 // validateEntityPositionData validates the needed type constraints
 // from v and cast it to EntityPositionData.
 export function validateEntityPositionData(v: any): t.EntityPositionData {
-    if (v.initial === undefined) throw new ValidationError("missing v.initial");
-    validateVector(v.initial);
+    if (v.initialPosition === undefined) throw new ValidationError("missing v.initialPosition");
+    validateVector(v.initialPosition);
     if (v.position === undefined) throw new ValidationError("missing v.position");
     validateVector(v.position);
 
