@@ -7,8 +7,8 @@ export const TickDuration: Millisecond = 1000 / TickRate;
 // UnixMilli is the Unix timestamp in milliseconds.
 export type UnixMilli = number;
 
-// Used for position, velocity, acceleration.
-// Contains an x and a y value
+// Vector is used for position, velocity, acceleration. It contains an x and a y
+// value.
 export type Vector = {
     x: number;
     y: number;
