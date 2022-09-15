@@ -32,17 +32,28 @@ export class SpriteEntity extends Entity {
 
     constructor(block, initialPos, sprite) {
         super(block, initialPos);
-        this.sprite = sprite;
-        this.sprite.x = initialPos.x * BlockSize;
-        this.sprite.y = initialPos.y * BlockSize;
+        // Replace Entity's position with our own, which is taken from the
+        // sprite.
+        delete this.position;
 
-        Object.defineProperty(this.sprite, "position", {
-            get() {
-                return this.position;
-            },
-            set(pos) {
-                this.position = pos;
-            },
-        });
+        this.sprite = sprite;
+        this.position = initialPos;
+    }
+
+    set position(pos) {
+        if (this.sprite) {
+            this.sprite.x = pos.x * BlockSize;
+            this.sprite.y = pos.y * BlockSize;
+        }
+    }
+
+    get position() {
+        if (this.sprite) {
+            return {
+                x: this.sprite.x / BlockSize,
+                y: this.sprite.y / BlockSize,
+            };
+        }
+        return { x: -1, y: -1 };
     }
 }

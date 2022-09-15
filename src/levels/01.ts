@@ -98,7 +98,6 @@ export class Level extends level.Level {
 }
 
 class platformEntity extends entity.Entity {
-    private mult = 1;
     private endBound: Vector;
 
     constructor(block: string, pos: Vector) {
@@ -110,12 +109,11 @@ class platformEntity extends entity.Entity {
     }
 
     tick(delta = 1) {
-        if (this.position.x > this.endBound.x) {
-            this.mult = -1;
-        } else if (this.position.x < this.initialPosition.x) {
-            this.mult = 1;
+        if (this.position.x >= this.endBound.x) {
+            this.velocity.x = -0.1;
+        } else if (this.position.x <= this.initialPosition.x) {
+            this.velocity.x = +0.1;
         }
-        this.position.x += 0.25 * this.mult * delta;
 
         super.tick(delta);
     }

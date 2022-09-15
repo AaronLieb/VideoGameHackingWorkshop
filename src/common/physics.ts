@@ -1,5 +1,5 @@
 import { Entity } from "/src/common/entity.ts";
-import { BlockModifier, Vector } from "/src/common/types.ts";
+import { BlockType, Vector } from "/src/common/types.ts";
 import { LevelMap } from "/src/common/map.ts";
 
 export class Engine {
@@ -22,7 +22,7 @@ export class Engine {
     }
 
     tickEntity(entity: Entity, deltaTime = 1) {
-        const isGrounded = this.checkGrounded(entity, this.map);
+        const isGrounded = this.isGrounded(entity);
         if (isGrounded) {
             entity.velocity.y = 0;
             entity.acceleration.y = 0;
@@ -37,14 +37,28 @@ export class Engine {
         entity.position.y += entity.velocity.y * deltaTime;
     }
 
-    checkGrounded(entity: Entity, map: LevelMap) {
-        let isGrounded = false;
-        map.iterate((pos: Vector, _, __, mods: BlockModifier[]) => {
-            if (!mods.includes("air") && pos.y - entity.position.y < 1) {
-                isGrounded = true;
-                return;
-            }
-        });
-        return isGrounded;
+    isGrounded(entity: Entity): boolean {
+        return false ||
+            this.positionIsGround({ x: Math.ceil(entity.position.x), y: Math.ceil(entity.position.y) }) ||
+            this.positionIsGround({ x: Math.ceil(entity.position.x), y: Math.ceil(entity.position.y) - 1 });
+    }
+
+    private positionIsGround(pos: Vector): boolean {
+        const block = this.map.at(pos);
+        if (!block) {
+            return false;
+        }
+
+        const btype = this.map.blockType(block);
+        if (!btype || btype == BlockType.Entity) {
+            return false;
+        }
+
+        const mods = this.map.blockMods(block);
+        if (mods.includes("air")) {
+            return false;
+        }
+
+        return true;
     }
 }

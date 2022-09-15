@@ -4,13 +4,14 @@ import { Engine } from "/public/js/common/physics.js";
 import { Player } from "/public/js/player.js";
 import { BlockSize } from "/public/js/common/types.js";
 import { AssetPath } from "/public/js/common/map.js";
+import { VecEq } from "/public/js/common/entity.js";
 import { SpriteEntity, SpriteFromAsset } from "/public/js/spriteEntity.js";
 
 export class Level {
     map;
     game;
     engine;
-    entities;
+    entities; // Entity[]
     sprites;
     backgrounds; // Background[]
     player;
@@ -60,14 +61,32 @@ export class Level {
     }
 
     addSprite(entity) {
-        this.sprites.push(entity);
+        this.sprites.push(entity.sprite);
         this.entities.push(entity);
         this.game.stage.addChild(entity.sprite);
     }
 
+    handleEvent(_ws, ev) {
+        switch (ev.type) {
+            case "ENTITY_MOVE": {
+                for (const update of ev.d.entities) {
+                    const entity = this.entities.find((entity) => {
+                        return VecEq(entity.initialPosition, update.initialPosition);
+                    });
+                    if (!entity) {
+                        console.error("skipping unknown entity at", update.initialPosition);
+                        continue;
+                    }
+                    entity.position = update.position;
+                }
+                break;
+            }
+        }
+    }
+
     loop(delta) {
-        for (const e of this.entities) {
-            this.engine.tickEntity(e, this.map, delta);
+        for (const ent of this.entities) {
+            this.engine.tickEntity(ent, delta);
         }
     }
 }

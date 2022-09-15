@@ -108,7 +108,7 @@ export class LevelMap {
         return position;
     }
     // blockAttributes looks up the attributes of a block.
-    blockAttributes(block) {
+    blockMods(block) {
         let mods = [];
         if (this.metadata.blockMods) {
             mods = this.metadata.blockMods[block] || [];
@@ -118,6 +118,14 @@ export class LevelMap {
             mods.push("air");
         }
         return mods;
+    }
+    blockType(block) {
+        if (this.metadata.blocks[block]) {
+            return BlockType.Block;
+        }
+        if (this.metadata.entities[block]) {
+            return BlockType.Entity;
+        }
     }
     // findBlock seeks for the first position with this block. Use this for
     // blocks that are known to only appear once.
@@ -147,10 +155,19 @@ export class LevelMap {
         }
     }
     // at looks up a block's object by the coordinates.
-    at(pos, type = BlockType.Block) {
+    at(pos) {
+        const line = this.lines[pos.y];
+        if (line) {
+            return line[pos.x];
+        }
+    }
+    assetAt(pos, type = BlockType.Block) {
         // Access Y first, X last. Y describes the line, while X is the offset
         // within that line.
-        const block = this.lines[pos.y][pos.x];
+        const block = this.at(pos);
+        if (!block) {
+            return BlankTextureID;
+        }
         const position = this.blockPosition(pos, block);
         return this.blockAsset(block, position, type) || NoTextureID;
     }
@@ -171,7 +188,7 @@ export class LevelMap {
         }
         const blockAttributes = {};
         for (const block in blocks) {
-            blockAttributes[block] = this.blockAttributes(block);
+            blockAttributes[block] = this.blockMods(block);
         }
         const x1 = x;
         const y1 = y;
@@ -211,7 +228,7 @@ export class LevelMap {
         if (!asset) {
             return;
         }
-        const mods = this.blockAttributes(block);
+        const mods = this.blockMods(block);
         for (let y = 0; y < this.height; y++) {
             const line = this.lines[y];
             for (let x = line.indexOf(block, 0); x != -1; x = line.indexOf(block, x + 1)) {

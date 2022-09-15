@@ -131,7 +131,7 @@ export class LevelMap {
     }
 
     // blockAttributes looks up the attributes of a block.
-    blockAttributes(block: Block): BlockModifier[] {
+    blockMods(block: Block): BlockModifier[] {
         let mods: BlockModifier[] = [];
         if (this.metadata.blockMods) {
             mods = this.metadata.blockMods[block] || [];
@@ -142,6 +142,15 @@ export class LevelMap {
             mods.push("air");
         }
         return mods;
+    }
+
+    blockType(block: Block): BlockType | undefined {
+        if (this.metadata.blocks[block]) {
+            return BlockType.Block;
+        }
+        if (this.metadata.entities[block]) {
+            return BlockType.Entity;
+        }
     }
 
     // findBlock seeks for the first position with this block. Use this for
@@ -171,10 +180,17 @@ export class LevelMap {
     }
 
     // at looks up a block's object by the coordinates.
-    at(pos: Vector, type = BlockType.Block): AssetID {
+    at(pos: Vector): Block | undefined {
+        const line = this.lines[pos.y];
+        if (line) return line[pos.x];
+    }
+
+    assetAt(pos: Vector, type = BlockType.Block): AssetID {
         // Access Y first, X last. Y describes the line, while X is the offset
         // within that line.
-        const block = this.lines[pos.y][pos.x];
+        const block = this.at(pos);
+        if (!block) return BlankTextureID;
+
         const position = this.blockPosition(pos, block);
         return this.blockAsset(block, position, type) || NoTextureID;
     }
@@ -205,7 +221,7 @@ export class LevelMap {
 
         const blockAttributes: Record<Block, BlockModifier[]> = {};
         for (const block in blocks) {
-            blockAttributes[block] = this.blockAttributes(block);
+            blockAttributes[block] = this.blockMods(block);
         }
 
         const x1 = x;
@@ -257,7 +273,7 @@ export class LevelMap {
         const asset = this.blockAsset(block, BlockPosition.Floating, BlockType.Entity);
         if (!asset) return;
 
-        const mods = this.blockAttributes(block);
+        const mods = this.blockMods(block);
 
         for (let y = 0; y < this.height; y++) {
             const line = this.lines[y];

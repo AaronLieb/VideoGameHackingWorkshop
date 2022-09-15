@@ -100,6 +100,10 @@ export class App {
             }
         }
 
+        if (this.level) {
+            this.level.handleEvent(ws, ev);
+        }
+
         for (const fn of this.hooks) {
             fn(ws, ev);
         }
