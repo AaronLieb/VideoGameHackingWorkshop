@@ -20,6 +20,7 @@ export interface Info {
     readonly number: number;
     readonly name: string | undefined;
     readonly desc: string | undefined;
+    readonly hidden?: boolean;
 }
 
 // Level describes a level with all its server logic.

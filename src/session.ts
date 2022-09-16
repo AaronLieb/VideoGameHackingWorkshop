@@ -30,11 +30,17 @@ export class Session {
                     type: "HELLO",
                     d: {
                         username: this.username,
-                        levels: levels.Info.map((level) => ({
-                            number: level.number,
-                            name: level.name,
-                            desc: level.desc,
-                        })),
+                        levels: levels.ConvertInfo((level) => {
+                            if (level.hidden) {
+                                return;
+                            }
+
+                            return {
+                                number: level.number,
+                                name: level.name,
+                                desc: level.desc,
+                            };
+                        }),
                     },
                 });
                 break;
@@ -53,7 +59,7 @@ export class Session {
                     this.currentLevel = undefined;
                 }
 
-                const level = levels.Info[cmd.d.level - 1];
+                const level = levels.Info.get(cmd.d.level);
                 if (!level) {
                     throw `unknown level ${cmd.d.level}`;
                 }
