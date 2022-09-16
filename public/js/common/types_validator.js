@@ -168,11 +168,11 @@ export function validatePersonalScore(v) {
     if (typeof v.level !== "number") {
         throw new ValidationError("missing v.level");
     }
-    if (v.your_best === undefined) {
-        throw new ValidationError("missing v.your_best");
+    if (v.yourBest === undefined) {
+        throw new ValidationError("missing v.yourBest");
     }
-    if (v.global_best === undefined) {
-        throw new ValidationError("missing v.global_best");
+    if (v.globalBest === undefined) {
+        throw new ValidationError("missing v.globalBest");
     }
     return v;
 }

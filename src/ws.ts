@@ -98,19 +98,25 @@ export class Server extends ws.ExtendedWebSocket {
 
     private dispatch(cmd: Command) {
         for (const handler of this.handlers) {
-            const promise = handler.handleCommand(this, cmd);
-            if (promise) {
-                promise.catch((err) => {
-                    this.send({
-                        type: "WARNING",
-                        d: {
-                            message: `${err}`,
-                        },
-                    });
-                    this.closeWithError(`${err}`);
-                });
+            try {
+                const promise = handler.handleCommand(this, cmd);
+                if (promise) {
+                    promise.catch((err) => this.dispatchErr(err));
+                }
+            } catch (err) {
+                this.dispatchErr(err);
             }
         }
+    }
+
+    private dispatchErr(err: Error) {
+        this.send({
+            type: "WARNING",
+            d: {
+                message: `${err}`,
+            },
+        });
+        this.closeWithError(`${err}`);
     }
 
     send(ev: Event) {

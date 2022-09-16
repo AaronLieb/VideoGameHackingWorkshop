@@ -1,4 +1,4 @@
-import { BlockPosition, MapMetadata, Vector } from "/src/common/types.ts";
+import { BlockPosition, MapBackgroundMode, MapMetadata, Vector } from "/src/common/types.ts";
 import * as level from "/src/level.ts";
 import * as session from "/src/session.ts";
 import * as entity from "/src/common/entity.ts";
@@ -70,9 +70,9 @@ const metadata: MapMetadata = {
         "g": ["air", "goal"],
     },
     backgrounds: [
-        { asset: "bg3", mode: "tiled" },
-        { asset: "bg1", mode: "tiled" },
-        { asset: "bg2", mode: "tiled" },
+        { asset: "bg3", mode: MapBackgroundMode.Tiled },
+        { asset: "bg1", mode: MapBackgroundMode.Tiled },
+        { asset: "bg2", mode: MapBackgroundMode.Tiled },
     ],
 };
 

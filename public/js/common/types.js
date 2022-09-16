@@ -75,3 +75,10 @@ export var BlockType;
     BlockType[BlockType["Block"] = 0] = "Block";
     BlockType[BlockType["Entity"] = 1] = "Entity";
 })(BlockType || (BlockType = {}));
+// MapBackgroundMode describes how the background should be rendered.
+export var MapBackgroundMode;
+(function (MapBackgroundMode) {
+    MapBackgroundMode["Tiled"] = "tiled";
+    MapBackgroundMode["Fixed"] = "fixed";
+    MapBackgroundMode["Stretched"] = "stretched";
+})(MapBackgroundMode || (MapBackgroundMode = {}));

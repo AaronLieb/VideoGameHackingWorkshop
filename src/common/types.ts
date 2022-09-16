@@ -126,8 +126,15 @@ export type MapMetadata = {
 // MapBackground describes a map's background layer.
 export type MapBackground = {
     asset: string;
-    mode: "tiled" | "stretched" | "fixed";
+    mode: MapBackgroundMode;
 };
+
+// MapBackgroundMode describes how the background should be rendered.
+export enum MapBackgroundMode {
+    Tiled = "tiled",
+    Fixed = "fixed",
+    Stretched = "stretched",
+}
 
 // AssetID is the ID of an asset. Assets are global, meaning all maps share the
 // same set of assets.
@@ -209,8 +216,8 @@ export type PersonalScoresEvent = {
 // best time for a level.
 export type PersonalScore = {
     level: number;
-    your_best: Millisecond; // your best time
-    global_best: Millisecond; // other people's best time
+    yourBest: Millisecond; // your best time
+    globalBest: Millisecond; // other people's best time
 };
 
 // LoaderboardUpdateEvent is emitted throughout the Websocket session when a new
@@ -231,7 +238,7 @@ export type LevelLeaderboard = {
     scores: LevelScore[];
 };
 
-// LevelLeaderboardScore is a single high score entry inside a leaderboard.
+// LevelScore is a single high score entry inside a leaderboard.
 export type LevelScore = {
     username: string;
     bestTime: Millisecond;

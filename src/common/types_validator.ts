@@ -136,8 +136,8 @@ export function validatePersonalScoresEvent(v: any): t.PersonalScoresEvent {
 // from v and cast it to PersonalScore.
 export function validatePersonalScore(v: any): t.PersonalScore {
     if (typeof v.level !== "number") throw new ValidationError("missing v.level");
-    if (v.your_best === undefined) throw new ValidationError("missing v.your_best");
-    if (v.global_best === undefined) throw new ValidationError("missing v.global_best");
+    if (v.yourBest === undefined) throw new ValidationError("missing v.yourBest");
+    if (v.globalBest === undefined) throw new ValidationError("missing v.globalBest");
 
     return v as t.PersonalScore;
 }
