@@ -15,13 +15,22 @@ const server = new http.Server({
     handler: handle,
 });
 
-Deno.addSignalListener("SIGINT", () => {
+const cleanup = () => {
     store.close();
     wsPool.close();
     server.close();
+};
 
+Deno.addSignalListener("SIGINT", () => {
+    cleanup();
     Deno.exit();
 });
 
 console.log(`listening at http://localhost:${port}`);
-await server.listenAndServe();
+try {
+    await server.listenAndServe();
+} catch (err) {
+    console.error("exception occured:", err);
+    cleanup();
+    Deno.exit(1);
+}

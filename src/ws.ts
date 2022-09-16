@@ -98,14 +98,13 @@ export class Server extends ws.ExtendedWebSocket {
 
     private dispatch(cmd: Command) {
         for (const handler of this.handlers) {
-            try {
-                const promise = handler.handleCommand(this, cmd);
-                if (promise) {
-                    promise.catch((err) => this.dispatchErr(err));
+            (async () => {
+                try {
+                    await handler.handleCommand(this, cmd);
+                } catch (err) {
+                    this.dispatchErr(err);
                 }
-            } catch (err) {
-                this.dispatchErr(err);
-            }
+            })();
         }
     }
 
@@ -119,8 +118,8 @@ export class Server extends ws.ExtendedWebSocket {
         this.closeWithError(`${err}`);
     }
 
-    send(ev: Event) {
-        super.send(ev);
+    send(ev: Event): boolean {
+        return super.send(ev);
     }
 }
 

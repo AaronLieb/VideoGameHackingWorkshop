@@ -28,21 +28,32 @@ export class ExtendedWebSocket {
     }
     send(data) {
         if (!this.socket) {
-            return;
+            return false;
         }
         const p = JSON.stringify(data);
-        this.socket.send(p);
+        try {
+            this.socket.send(p);
+            return true;
+        } catch (_) {
+            // Cannot send anything. Just ignore.
+            return false;
+        }
     }
     close() {
-        this.closeWithError();
+        return this.closeWithError();
     }
     // closeWithError closes the WebSocket with an abnormal error code. For more
     // information, see
     // https://www.rfc-editor.org/rfc/rfc6455.html#section-7.4.1.
     closeWithError(error, code = 1008) {
         if (!this.socket) {
-            return;
+            return false;
         }
-        this.socket.close(code, error);
+        try {
+            this.socket.close(code, error);
+            return true;
+        } catch (_) {
+            return false;
+        }
     }
 }

@@ -33,21 +33,38 @@ export class ExtendedWebSocket {
         };
     }
 
-    send(data: unknown) {
-        if (!this.socket) return;
+    send(data: unknown): boolean {
+        if (!this.socket) {
+            return false;
+        }
+
         const p = JSON.stringify(data);
-        this.socket.send(p);
+        try {
+            this.socket.send(p);
+            return true;
+        } catch (_) {
+            // Cannot send anything. Just ignore.
+            return false;
+        }
     }
 
-    close() {
-        this.closeWithError();
+    close(): boolean {
+        return this.closeWithError();
     }
 
     // closeWithError closes the WebSocket with an abnormal error code. For more
     // information, see
     // https://www.rfc-editor.org/rfc/rfc6455.html#section-7.4.1.
-    closeWithError(error?: string, code = 1008) {
-        if (!this.socket) return;
-        this.socket.close(code, error);
+    closeWithError(error?: string, code = 1008): boolean {
+        if (!this.socket) {
+            return false;
+        }
+
+        try {
+            this.socket.close(code, error);
+            return true;
+        } catch (_) {
+            return false;
+        }
     }
 }
