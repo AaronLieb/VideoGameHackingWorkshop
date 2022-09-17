@@ -168,11 +168,11 @@ export function validatePersonalScore(v) {
     if (typeof v.level !== "number") {
         throw new ValidationError("missing v.level");
     }
-    if (v.yourBest === undefined) {
-        throw new ValidationError("missing v.yourBest");
+    if (typeof v.rank !== "number") {
+        throw new ValidationError("missing v.rank");
     }
-    if (v.globalBest === undefined) {
-        throw new ValidationError("missing v.globalBest");
+    if (v.bestTime === undefined) {
+        throw new ValidationError("missing v.bestTime");
     }
     return v;
 }
@@ -201,6 +201,9 @@ export function validateLevelLeaderboard(v) {
 // validateLevelScore validates the needed type constraints
 // from v and cast it to LevelScore.
 export function validateLevelScore(v) {
+    if (typeof v.rank !== "number") {
+        throw new ValidationError("missing v.rank");
+    }
     if (typeof v.username !== "string") {
         throw new ValidationError("missing v.username");
     }

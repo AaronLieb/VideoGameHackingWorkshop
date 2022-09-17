@@ -3,6 +3,7 @@
 
 :root {
   --primary: #546e7a;
+  --border-radius: 16px;
 }
 
 body {
@@ -48,17 +49,123 @@ body > footer {
   background-color: black;
 }
 
-#game:empty {
+#game:empty,
+#level-menu:empty {
   display: none;
 }
 
-#game + .loading {
+#game-loading {
   display: none;
 }
 
-#game:empty + .loading {
+#game:empty + #level-menu:empty + #game-loading {
   display: block;
   max-width: 200px;
   margin: auto;
   margin-top: 2em;
+}
+
+#game:not(:empty) + #level-menu {
+  display: none;
+}
+
+#level-menu {
+}
+
+#level-menu > h2 {
+  text-align: center;
+  margin-bottom: calc(var(--typography-spacing-vertical));
+}
+
+#level-menu > .level-item {
+  border-radius: var(--border-radius);
+  background-color: var(--card-background-color);
+  border: 3px solid var(--card-background-color);
+  padding: 0;
+  /* transition: linear 50ms all; */
+}
+
+#level-menu > .level-item:hover {
+  border-color: var(--accordion-active-summary-color);
+}
+
+#level-menu > .level-item > summary {
+  padding: calc(var(--typography-spacing-vertical) - 3px) calc((var(--form-element-spacing-horizontal) * 2) - 3px);
+}
+
+#level-menu > .level-item > *:not(summary) {
+  margin: calc(var(--typography-spacing-vertical) - 3px) calc((var(--form-element-spacing-horizontal) * 2) - 3px);
+  margin-top: 0;
+}
+
+#level-menu > .level-item > .level-info {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+#level-menu > .level-item > .level-info > * {
+  margin: 0;
+}
+
+#level-menu > .level-item > .level-info > h3 {
+  flex: 1;
+}
+
+#level-menu > .level-item > .level-info > h3 > small {
+  font-weight: normal;
+  margin-left: 0.25em;
+}
+
+#level-menu > .level-item > .level-info > .level-scores {
+  display: grid;
+  grid-template-rows: auto auto;
+  grid-template-columns: 1fr auto;
+  grid-row-gap: 0;
+  grid-column-gap: 0.5em;
+}
+
+#level-menu > .level-item > .level-info > .level-scores > .score-k {
+  text-align: right;
+}
+#level-menu > .level-item > .level-info > .level-scores > .score-v {
+  text-align: left;
+}
+
+#level-menu > .level-item > .level-description {
+  font-size: 0.9em;
+  margin: var(--typography-spacing-vertical) 0;
+}
+
+#level-menu .level-leaderboard h4 {
+  text-align: center;
+}
+
+#level-menu .level-leaderboard th {
+  font-weight: bold;
+}
+
+#level-menu .level-leaderboard .rank {
+  width: 0;
+  text-align: end;
+}
+
+#level-menu .level-leaderboard .leaderboard-placeholder > td {
+  text-align: center;
+}
+
+@media only screen and (max-width: 800px) {
+  #level-menu > .level-item > .level-info {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+  #level-menu > .level-item > .level-info::after {
+    position: absolute;
+    right: 0;
+    height: 100%;
+  }
+  #level-menu > .level-item > .level-info > h3 {
+    margin-bottom: calc(var(--typography-spacing-vertical) / 2);
+  }
 }

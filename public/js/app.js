@@ -1,5 +1,6 @@
 import * as map from "/public/js/common/map.js";
 import * as ws from "/public/js/common/wsclient.js";
+import * as levelList from "/public/js/components/levelList.js";
 import { Level } from "/public/js/level.js";
 
 export class NotLoggedInError extends Error {
@@ -50,18 +51,24 @@ export async function Start(opts) {
 
 export class App {
     username;
-    levels; // LevelInfo[]
-    player; // Player
     hooks; // Set<(ws, ev) => void>
+    ws; // ws.Client | undefined
+
     level; // Level | undefined
 
     gameElement;
     levelsElement; // TODO
+    levelsComponent;
 
     constructor(opts) {
         this.hooks = new Set();
+
         this.gameElement = opts.gameElement;
         this.levelsElement = opts.levelsElement;
+
+        this.levelsComponent = new levelList.Component(this.levelsElement, {
+            onSelectLevel: (level) => this.#joinLevel(level),
+        });
 
         const resizer = new ResizeObserver(() => {
             if (this.level) this.level.game.resizeToElem(this.gameElement);
@@ -69,12 +76,37 @@ export class App {
         resizer.observe(this.gameElement);
     }
 
+    #joinLevel(n) {
+        if (this.level) {
+            this.level.destroy();
+            this.level = undefined;
+        }
+
+        if (!this.ws) {
+            throw "websocket not connected";
+        }
+
+        this.ws.send({
+            type: "JOIN",
+            d: {
+                level: n,
+            },
+        });
+    }
+
     handleEvent(ws, ev) {
         switch (ev.type) {
+            case "_open":
+                this.ws = ws;
+                break;
+            case "_close":
+                this.ws = undefined;
+                break;
             case "HELLO": {
                 this.username = ev.d.username;
-                this.levels = ev.d.levels;
-                ws.send({ type: "JOIN", d: { level: 1 } });
+                this.levelsComponent.set({
+                    levelInfo: ev.d.levels,
+                });
                 break;
             }
             case "LEVEL_JOINED": {

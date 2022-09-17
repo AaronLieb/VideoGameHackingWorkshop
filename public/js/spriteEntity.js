@@ -21,6 +21,7 @@ export function SpriteFromAsset(assetID, mods) {
                 const hscale = BlockSize / sprite.texture.baseTexture.realHeight;
                 sprite.scale.set(wscale, hscale);
             });
+            sprite.texture.baseTexture.update();
         }
     }
 
