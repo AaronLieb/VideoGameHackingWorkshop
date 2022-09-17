@@ -136,8 +136,8 @@ export function validatePersonalScoresEvent(v: any): t.PersonalScoresEvent {
 // from v and cast it to PersonalScore.
 export function validatePersonalScore(v: any): t.PersonalScore {
     if (typeof v.level !== "number") throw new ValidationError("missing v.level");
-    if (v.yourBest === undefined) throw new ValidationError("missing v.yourBest");
-    if (v.globalBest === undefined) throw new ValidationError("missing v.globalBest");
+    if (typeof v.rank !== "number") throw new ValidationError("missing v.rank");
+    if (v.bestTime === undefined) throw new ValidationError("missing v.bestTime");
 
     return v as t.PersonalScore;
 }
@@ -163,6 +163,7 @@ export function validateLevelLeaderboard(v: any): t.LevelLeaderboard {
 // validateLevelScore validates the needed type constraints
 // from v and cast it to LevelScore.
 export function validateLevelScore(v: any): t.LevelScore {
+    if (typeof v.rank !== "number") throw new ValidationError("missing v.rank");
     if (typeof v.username !== "string") throw new ValidationError("missing v.username");
     if (v.bestTime === undefined) throw new ValidationError("missing v.bestTime");
 

@@ -1,4 +1,4 @@
-import { Leaderboards, LevelLeaderboard, LevelScore } from "/src/common/types.ts";
+import { Leaderboards, LevelLeaderboard, Millisecond, PersonalScore } from "/src/common/types.ts";
 import { sqlite } from "/src/deps.ts";
 import * as store from "/src/store.ts";
 
@@ -52,7 +52,7 @@ export class SQLiteStore implements store.Storer {
         return new Promise((done) => done());
     }
 
-    async setScore(level: number, score: LevelScore): Promise<boolean> {
+    async setScore(level: number, username: string, bestTime: Millisecond): Promise<PersonalScore | undefined> {
         const changedRows = await this.db.queryAll(
             `
 			INSERT INTO leaderboards (level, username, best_time) VALUES (?, ?, ?)
@@ -61,15 +61,49 @@ export class SQLiteStore implements store.Storer {
 					WHERE best_time > excluded.best_time
 				RETURNING *;
 			`,
-            [level, score.username, score.bestTime],
+            [level, username, bestTime],
         );
-        return changedRows.length > 0;
+
+        if (changedRows.length == 0) {
+            return;
+        }
+
+        return await this.userScore(level, username);
+    }
+
+    async userScore(level: number, username: string): Promise<PersonalScore | undefined> {
+        const rows = this.db.query(
+            `
+			SELECT * FROM (
+				SELECT RANK() OVER (ORDER BY best_time ASC) AS rank, best_time
+					FROM leaderboards
+					WHERE level = ?
+				)
+				WHERE username = ?;
+			`,
+            [level, username],
+        );
+
+        for await (const row of rows) {
+            const r = row as {
+                rank: number;
+                best_time: number;
+            };
+
+            return {
+                level: level,
+                rank: r.rank,
+                bestTime: r.best_time,
+            };
+        }
     }
 
     async leaderboard(level: number): Promise<LevelLeaderboard> {
+        // SELECT RANK() OVER (ORDER BY best_time ASC) AS n, * FROM leaderboards;
         const rows = this.db.query(
             `
-			SELECT username, best_time FROM leaderboards
+			SELECT RANK() OVER (ORDER BY best_time ASC) AS rank, username, best_time
+				FROM leaderboards
 				WHERE level = ?
 				ORDER BY best_time DESC
 				LIMIT ${leaderboardLimit};
@@ -84,10 +118,12 @@ export class SQLiteStore implements store.Storer {
 
         for await (const row of rows) {
             const score = row as {
+                rank: number;
                 username: string;
                 best_time: number;
             };
             leaderboard.scores.push({
+                rank: score.rank,
                 username: score.username,
                 bestTime: score.best_time,
             });

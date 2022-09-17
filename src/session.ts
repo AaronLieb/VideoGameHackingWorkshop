@@ -89,12 +89,13 @@ export class Session {
     }
 
     async setScore(level: number, time: number) {
-        const newHiscore = await this.store.setScore(level, {
-            username: this.username,
-            bestTime: time,
-        });
+        const newScore = await this.store.setScore(level, this.username, time);
+        if (newScore) {
+            this.ws.send({
+                type: "PERSONAL_SCORES",
+                d: [newScore],
+            });
 
-        if (newHiscore) {
             const leaderboard = await this.store.leaderboard(level);
             this.wsPool.emit({
                 type: "LEADERBOARD_UPDATE",

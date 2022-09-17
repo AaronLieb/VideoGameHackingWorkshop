@@ -216,8 +216,8 @@ export type PersonalScoresEvent = {
 // best time for a level.
 export type PersonalScore = {
     level: number;
-    yourBest: Millisecond; // your best time
-    globalBest: Millisecond; // other people's best time
+    rank: number;
+    bestTime: Millisecond; // your best time
 };
 
 // LoaderboardUpdateEvent is emitted throughout the Websocket session when a new
@@ -240,6 +240,7 @@ export type LevelLeaderboard = {
 
 // LevelScore is a single high score entry inside a leaderboard.
 export type LevelScore = {
+    rank: number;
     username: string;
     bestTime: Millisecond;
 };
