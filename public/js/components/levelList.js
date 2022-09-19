@@ -1,5 +1,6 @@
 import { html, preact } from "/public/js/deps.js";
 import { escapeHTML } from "/public/js/html/escape.js";
+import * as timefmt from "/public/js/internal/timefmt.js";
 
 export class Component {
     element;
@@ -87,16 +88,16 @@ function renderSummary(info) {
 			${info.globalBest && html`
 				<span class="score-k">Global Best:</span>
 				<span class="score-v">
-					<time datetime="${formatTime(info.globalBest.bestTime)}">
-						${formatTime(info.globalBest.bestTime)}
+					<time datetime="${timefmt.duration(info.globalBest.bestTime)}">
+						${timefmt.duration(info.globalBest.bestTime)}
 					</time>
 				</span>
 			`}
 			${info.personalScore && html`
 				<span class="score-k">Personal Best:</span>
 				<span class="score-v">
-					<time datetime="${formatTime(info.personalScore.bestTime)}">
-						${formatTime(info.personalScore.bestTime)}
+					<time datetime="${timefmt.duration(info.personalScore.bestTime)}">
+						${timefmt.duration(info.personalScore.bestTime)}
 					</time>
 					(#${info.personalScore.rank})
 				</span>
@@ -123,7 +124,7 @@ function renderLeaderboard(leaderboard) {
 						<tr>
 							<td class="rank">${score.rank}</td>
 							<td class="user">${escapeHTML(score.username)}</td>
-							<td class="time">${formatTime(score.bestTime)}</td>
+							<td class="time">${timefmt.duration(score.bestTime)}</td>
 						</tr>
 					`) : html`
 						<tr class="leaderboard-placeholder">
@@ -134,20 +135,4 @@ function renderLeaderboard(leaderboard) {
 			</table>
 		</div>
 	`
-}
-
-const msDay = 1 * // 1 day
-    24 * // 24 hours a day
-    60 * // 60 minutes an hour
-    60 * // 60 seconds a minute
-    1000; // 1000 milliseconds a second
-
-function formatTime(ms) {
-    if (ms > msDay) {
-        return "Too long (>1d)";
-    }
-
-    const d = new Date(0);
-    d.setMilliseconds(ms);
-    return d.toISOString().replace(/.*T([0-9:.]+)Z/, "$1");
 }

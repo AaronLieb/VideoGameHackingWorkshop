@@ -1,5 +1,6 @@
 import * as map from "/public/js/common/map.js";
 import * as ws from "/public/js/common/wsclient.js";
+import * as gameBox from "/public/js/components/gameBox.js";
 import * as levelList from "/public/js/components/levelList.js";
 import { Level } from "/public/js/level.js";
 
@@ -56,14 +57,20 @@ export class App {
 
     level; // Level | undefined
 
-    gameElement;
+    gamePageElement;
+
+    gameBoxElement;
+    gameBoxComponent;
+
     levelsElement; // TODO
     levelsComponent;
 
     constructor(opts) {
+        Object.assign(this, opts);
         this.hooks = new Set();
 
-        this.gameElement = opts.gameElement;
+        this.gameBoxElement = opts.gameElement;
+        this.gamePageElement = opts.gamePageElement;
         this.levelsElement = opts.levelsElement;
 
         this.levelsComponent = new levelList.Component(this.levelsElement, {
@@ -71,26 +78,37 @@ export class App {
         });
 
         const resizer = new ResizeObserver(() => {
-            if (this.level) this.level.game.resizeToElem(this.gameElement);
+            if (this.level) this.level.game.resizeToElem(this.gameBoxElement);
         });
-        resizer.observe(this.gameElement);
+        resizer.observe(this.gameBoxElement);
     }
 
-    #joinLevel(n) {
+    #leaveLevel(notify = true) {
+        if (notify && this.ws) {
+            this.ws.send({
+                type: "JOIN",
+                d: { level: null },
+            });
+        }
+
+        if (this.gameBoxComponent) {
+            this.gameBoxComponent.destroy();
+            this.gameBoxComponent = undefined;
+        }
+
         if (this.level) {
             this.level.destroy();
             this.level = undefined;
         }
 
-        if (!this.ws) {
-            throw "websocket not connected";
-        }
+        this.gamePageElement.classList.remove("in-game");
+    }
 
+    #joinLevel(n) {
+        this.#leaveLevel(false);
         this.ws.send({
             type: "JOIN",
-            d: {
-                level: n,
-            },
+            d: { level: n },
         });
     }
 
@@ -112,14 +130,17 @@ export class App {
             case "LEVEL_JOINED": {
                 const levelMap = new map.LevelMap(ev.d.raw, ev.d.metadata);
                 this.level = new Level(levelMap);
-                this.level.game.resizeTo = this.gameElement;
-                this.level.game.resizeToElem();
-                this.gameElement.appendChild(this.level.game.view);
+
+                this.gameBoxComponent = new gameBox.Component(this.gameBoxElement, this.level.game, ev.d.info, {
+                    quit: () => this.#leaveLevel(),
+                    restart: () => this.#joinLevel(ev.d.info.number),
+                });
+
+                this.gamePageElement.classList.add("in-game");
                 break;
             }
             case "LEVEL_FINISHED": {
-                this.gameElement.removeChild(this.level.game.view);
-                this.level = undefined;
+                this.#leaveLevel();
                 break;
             }
             case "WARNING": {

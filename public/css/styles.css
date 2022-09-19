@@ -17,6 +17,16 @@ body > footer {
   padding: 1em 0;
 }
 
+button.outline {
+  background: transparent;
+  border-color: var(--primary);
+  border-width: 2px;
+}
+
+button.outline:hover {
+  background: var(--primary);
+}
+
 #login-page {
   max-width: 600px;
   height: 100vh;
@@ -41,12 +51,36 @@ body > footer {
   top: 0;
 }
 
-#game {
+#game-page.in-game > h1 {
+  display: none;
+}
+
+#game > .game-canvas {
   /* https://caniuse.com/mdn-css_properties_aspect-ratio */
   aspect-ratio: 16 / 10;
   width: 100%;
   overflow: hidden;
   background-color: black;
+}
+
+#game > .game-controls {
+  display: flex;
+  justify-content: space-between;
+  margin-top: var(--typography-spacing-vertical);
+}
+
+#game > .game-controls > .game-buttons {
+  display: flex;
+  flex-direction: row;
+  gap: calc(var(--typography-spacing-vertical) / 2);
+}
+
+#game > .game-controls > .game-buttons > .game-quit {
+  --primary: var(--del-color);
+}
+
+#game > .game-controls > .game-timer > * {
+  margin: 0;
 }
 
 #game:empty,

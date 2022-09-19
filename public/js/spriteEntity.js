@@ -14,13 +14,16 @@ export function SpriteFromAsset(assetID, mods) {
         sprite.roundPixels = true;
 
         if (!mods || !mods.include || !mods.include("fixed")) {
-            sprite.texture.baseTexture.scaleMode = PIXI.SCALE_MODES.NEAREST;
-            sprite.texture.baseTexture.mipmap = PIXI.MIPMAP_MODES.POW2;
-            sprite.texture.baseTexture.on("loaded", () => {
+            const applyScale = () => {
                 const wscale = BlockSize / sprite.texture.baseTexture.realWidth;
                 const hscale = BlockSize / sprite.texture.baseTexture.realHeight;
                 sprite.scale.set(wscale, hscale);
-            });
+            };
+
+            sprite.texture.baseTexture.scaleMode = PIXI.SCALE_MODES.NEAREST;
+            sprite.texture.baseTexture.mipmap = PIXI.MIPMAP_MODES.POW2;
+            sprite.texture.baseTexture.on("loaded", () => applyScale());
+            applyScale();
             sprite.texture.baseTexture.update();
         }
     }

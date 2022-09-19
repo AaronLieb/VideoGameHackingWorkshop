@@ -58,6 +58,7 @@ export class Level {
 
     destroy() {
         this.game.ticker.remove(this.loop);
+        this.game.destroy();
     }
 
     addSprite(entity) {
