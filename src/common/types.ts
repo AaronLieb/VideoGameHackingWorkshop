@@ -281,8 +281,9 @@ export type Command =
 export type JoinCommand = {
     readonly type: "JOIN";
     d: {
-        // level is the level that the client wants to join.
-        level: number;
+        // level is the level that the client wants to join. If null, then no
+        // level is joined, and a LEVEL_JOINED is not emitted.
+        level: number | null;
     };
 };
 

@@ -59,6 +59,10 @@ export class Session {
                     this.currentLevel = undefined;
                 }
 
+                if (!cmd.d.level) {
+                    return;
+                }
+
                 const level = levels.Info.get(cmd.d.level);
                 if (!level) {
                     throw `unknown level ${cmd.d.level}`;
