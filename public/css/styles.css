@@ -192,14 +192,16 @@ button.outline:hover {
   #level-menu > .level-item > .level-info {
     display: flex;
     flex-direction: column;
+    justify-content: center;
     position: relative;
   }
   #level-menu > .level-item > .level-info::after {
     position: absolute;
     right: 0;
     height: 100%;
+    margin-right: var(--typography-spacing-vertical);
   }
-  #level-menu > .level-item > .level-info > h3 {
-    margin-bottom: calc(var(--typography-spacing-vertical) / 2);
+  #level-menu > .level-item > .level-info > p:not(:empty) {
+    margin-top: calc(var(--typography-spacing-vertical) / 2);
   }
 }
