@@ -4,7 +4,7 @@ import * as store from "/src/store.ts";
 import * as session from "/src/session.ts";
 
 export function New(store: store.Storer, wsPool: ws.ServerPool): httpserver.Handler {
-    return async (request: Request): Promise<Response> => {
+    const h = async (request: Request): Promise<Response> => {
         const url = new URL(request.url);
 
         switch (url.pathname) {
@@ -50,15 +50,23 @@ export function New(store: store.Storer, wsPool: ws.ServerPool): httpserver.Hand
                     return http.Respond(`${err}`, http.Status.BadRequest);
                 }
 
-                const username = form.get("username");
-                if (!username) {
+                const usernameForm = form.get("username");
+                if (!usernameForm) {
                     return http.Respond("missing username in form", http.Status.BadRequest);
+                }
+
+                const username = usernameForm.toString();
+                if (username == "") {
+                    return http.Respond("empty username not permitted", http.Status.BadRequest);
+                }
+                if (username.length > session.MaxNameLength) {
+                    return http.Respond("name too long!", http.Status.BadRequest);
                 }
 
                 const headers = new Headers();
                 http.setCookie(headers, {
                     name: "VGHW-Username",
-                    value: username.toString(),
+                    value: username,
                     path: "/",
                 });
 
@@ -79,6 +87,15 @@ export function New(store: store.Storer, wsPool: ws.ServerPool): httpserver.Hand
                     .serveFile(request, "./public" + url.pathname)
                     .catch((_: Deno.errors.NotFound) => http.RespondStatus(404));
             }
+        }
+    };
+
+    return async (request: Request): Promise<Response> => {
+        try {
+            return await h(request);
+        } catch (err) {
+            console.error("request caused exception:", err);
+            return http.RespondStatus(http.Status.InternalServerError);
         }
     };
 }

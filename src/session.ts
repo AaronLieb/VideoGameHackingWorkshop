@@ -5,6 +5,10 @@ import * as score from "/src/common/score.ts";
 import * as level from "/src/levels/level.ts";
 import * as levels from "/src/levels/levels.ts";
 
+// MaxNameLength is the maximum username length before things are truncated.
+// Don't forget to also update /public/login/index.html.
+export const MaxNameLength = 24;
+
 export class Session {
     readonly store: store.Storer;
     readonly username: string;
@@ -18,6 +22,10 @@ export class Session {
         store: store.Storer;
         wsPool: ws.ServerPool;
     }) {
+        if (username.length > MaxNameLength) {
+            username = username.slice(0, MaxNameLength);
+        }
+
         this.username = username;
         this.store = d.store;
         this.wsPool = d.wsPool;
