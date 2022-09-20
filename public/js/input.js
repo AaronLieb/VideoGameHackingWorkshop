@@ -102,6 +102,7 @@ const updateHooks = [
                 idx++;
                 if (idx == str.length) {
                     secrets[str].forEach((callback) => callback());
+                    secretBuffer.set(str, 0);
                 } else {
                     secretBuffer.set(str, idx);
                 }
