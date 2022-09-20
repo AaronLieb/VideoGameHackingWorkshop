@@ -1,4 +1,4 @@
-import { Command } from "/src/common/types.ts";
+import { Command, PersonalScore } from "/src/common/types.ts";
 import * as ws from "/src/ws.ts";
 import * as store from "/src/store.ts";
 import * as score from "/src/common/score.ts";
@@ -23,17 +23,21 @@ export class Session {
         this.wsPool = d.wsPool;
     }
 
-    handleCommand(server: ws.Server, cmd: Command) {
+    async handleCommand(server: ws.Server, cmd: Command) {
         switch (cmd.type) {
             case "_open": {
                 this.ws = server;
-                server.send({
-                    type: "HELLO",
-                    d: {
-                        username: this.username,
-                        levels: levels.LevelInfo(),
-                    },
-                });
+
+                try {
+                    await this.#sayHello();
+                } catch (err) {
+                    console.error("cannot say hello:", err);
+                    this.ws.send({
+                        type: "WARNING",
+                        d: { message: `cannot say hello: ${err}` },
+                    });
+                }
+
                 break;
             }
             case "_close": {
@@ -103,5 +107,39 @@ export class Session {
                 d: globalLeaderboard,
             });
         }
+    }
+
+    async #sayHello() {
+        this.ws.send({
+            type: "HELLO",
+            d: {
+                username: this.username,
+                levels: levels.LevelInfo(),
+            },
+        });
+
+        const leaderboards = await this.store.leaderboards();
+        this.ws.send({
+            type: "LEADERBOARD_UPDATE",
+            d: leaderboards,
+        });
+
+        // userBestTimes doesn't have ranking for performance reasons, so we
+        // just use userBestTime, since sayHello is only done once per connect.
+        const personalScores: PersonalScore[] = [];
+        for (const level of levels.LevelInfo()) {
+            const score = await this.store.userBestTime(level.number, this.username);
+            if (score) personalScores.push(score);
+        }
+        this.ws.send({
+            type: "PERSONAL_SCORES",
+            d: personalScores,
+        });
+
+        const globalLeaderboard = await this.store.globalLeaderboard();
+        this.ws.send({
+            type: "GLOBAL_LEADERBOARD_UPDATE",
+            d: globalLeaderboard,
+        });
     }
 }

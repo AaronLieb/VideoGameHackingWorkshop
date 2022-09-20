@@ -99,8 +99,8 @@ export class SQLiteStore implements store.Storer {
     async userBestTime(level: number, username: string): Promise<PersonalScore | undefined> {
         const rows = await this.db.queryAll(
             `
-			SELECT * FROM (
-				SELECT RANK() OVER (ORDER BY best_time ASC) AS rank, best_time
+			SELECT rank, best_time FROM (
+				SELECT RANK() OVER (ORDER BY best_time ASC) AS rank, username, best_time
 					FROM leaderboards
 					WHERE level = ?
 				)
@@ -108,7 +108,7 @@ export class SQLiteStore implements store.Storer {
 			`,
             [level, username],
         );
-        if (!rows) {
+        if (!rows || !rows[0]) {
             return;
         }
 
@@ -185,7 +185,9 @@ export class SQLiteStore implements store.Storer {
 
     async leaderboards(): Promise<Leaderboards> {
         const rows = await this.db.queryAll(`SELECT DISTINCT level from leaderboards`);
-        const levels = rows.map(({ level }) => level as number);
+        const levels = rows
+            .filter((row) => row !== undefined)
+            .map(({ level }) => level as number);
 
         const leaderboardsAsync = levels.map((level) => this.leaderboard(level));
         const leaderboards = await Promise.all(leaderboardsAsync);

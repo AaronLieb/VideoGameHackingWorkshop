@@ -5,7 +5,7 @@ export interface Storer {
     close(): Promise<void>;
     // userBestTime gets the score of the given user and level.
     userBestTime(level: number, username: string): Promise<PersonalScore | undefined>;
-    // userBestTimes gets all the scorees of the given user. It should return a
+    // userBestTimes gets all the scores of the given user. It should return a
     // map of level number to the best time.
     userBestTimes(username: string): Promise<Map<number, number>>;
     // setScore returns the new PersonalScore if the given score is a new high
