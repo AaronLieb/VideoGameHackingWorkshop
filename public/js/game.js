@@ -8,10 +8,6 @@ export class Game extends PIXI.Application {
     height;
 
     constructor() {
-        let type = "WebGL";
-        if (!PIXI.utils.isWebGLSupported()) type = "canvas";
-        PIXI.utils.sayHello(type);
-
         super({
             width: canvasSize.w,
             height: canvasSize.h,
