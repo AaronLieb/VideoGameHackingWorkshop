@@ -1,8 +1,12 @@
 import { PIXI } from "/public/js/deps.js";
+import { BlockSize } from "/public/js/common/types.js";
 
 export const canvasSize = { w: 640, h: 400 };
 
 export class Game extends PIXI.Application {
+    width;
+    height;
+
     constructor() {
         let type = "WebGL";
         if (!PIXI.utils.isWebGLSupported()) type = "canvas";
@@ -24,6 +28,9 @@ export class Game extends PIXI.Application {
         );
         this.stage.scale.set(scale);
         this.resize();
+
+        this.width = this.screen.width / BlockSize;
+        this.height = this.screen.height / BlockSize;
     }
 }
 

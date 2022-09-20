@@ -53,6 +53,10 @@ export function validateEvent(v: any): t.Event {
             validateLeaderboardUpdateEvent(v);
             break;
         }
+        case "GLOBAL_LEADERBOARD_UPDATE": {
+            validateGlobalLeaderboardUpdateEvent(v);
+            break;
+        }
         case "ENTITY_MOVE": {
             validateEntityMoveEvent(v);
             break;

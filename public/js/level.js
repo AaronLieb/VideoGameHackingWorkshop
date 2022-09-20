@@ -1,11 +1,12 @@
-import { PIXI } from "/public/js/deps.js";
 import { Game } from "/public/js/game.js";
 import { Engine } from "/public/js/common/physics.js";
-import { Player } from "/public/js/player.js";
+import { Player } from "/public/js/entity/player.js";
 import { BlockSize } from "/public/js/common/types.js";
-import { AssetPath } from "/public/js/common/map.js";
 import { VecEq } from "/public/js/common/entity.js";
-import { SpriteEntity, SpriteFromAsset } from "/public/js/spriteEntity.js";
+import { SpriteEntity, SpriteFromAsset } from "/public/js/entity/spriteEntity.js";
+import { RainingFrank } from "/public/js/entity/frank.js";
+import { Background } from "/public/js/entity/background.js";
+import * as input from "/public/js/input.js";
 
 export class Level {
     map;
@@ -15,6 +16,7 @@ export class Level {
     sprites;
     backgrounds; // Background[]
     player;
+    frankCallback;
 
     constructor(map) {
         this.map = map;
@@ -53,11 +55,17 @@ export class Level {
             this.addSprite(sprite);
         });
 
-        this.game.ticker.add((delta) => this.loop(delta));
+        this.game.ticker.add((delta) => this.tick(delta));
+
+        // We need this for Set's internal equality check.
+        this.frankCallback = () => this.#spawnFrank();
+        input.registerSecret("FRNK", this.frankCallback);
     }
 
     destroy() {
-        this.game.ticker.remove(this.loop);
+        input.unregisterSecret("FRNK", this.frankCallback);
+
+        this.game.ticker.remove(this.tick);
         this.game.destroy();
     }
 
@@ -85,47 +93,14 @@ export class Level {
         }
     }
 
-    loop(delta) {
+    tick(delta) {
         for (const ent of this.entities) {
             this.engine.tickEntity(ent, delta);
         }
     }
-}
 
-export class Background {
-    sprite;
-    parallaxFactor; // TODO
-
-    constructor(map, bg) {
-        const { asset, mode } = bg;
-
-        switch (mode) {
-            case "stretched":
-                this.sprite = PIXI.Sprite.from(AssetPath(asset));
-                this.sprite.texture.baseTexture.scaleMode = PIXI.SCALE_MODES.NEAREST;
-                this.sprite.texture.baseTexture.on("update", () => {
-                    const wscale = (map.width * BlockSize) / this.sprite.texture.baseTexture.realWidth;
-                    const hscale = (map.height * BlockSize) / this.sprite.texture.baseTexture.realHeight;
-                    this.sprite.scale.set(wscale, hscale);
-                });
-                break;
-            case "tiled":
-                this.sprite = PIXI.TilingSprite.from(AssetPath(asset), {
-                    width: map.width * BlockSize,
-                    height: map.height * BlockSize,
-                });
-                this.sprite.texture.baseTexture.scaleMode = PIXI.SCALE_MODES.NEAREST;
-                this.sprite.texture.baseTexture.on("update", () => {
-                    const scale = (map.height * BlockSize) / this.sprite.texture.baseTexture.realHeight;
-                    this.sprite.scale.set(scale, scale);
-                });
-                break;
-            default:
-                throw `unknown background mode ${mode}`;
-        }
-
-        this.sprite.x = 0;
-        this.sprite.y = 0;
-        this.sprite.texture.baseTexture.update();
+    #spawnFrank() {
+        const frank = new RainingFrank(this.game.width, this.game.height);
+        this.addSprite(frank);
     }
 }

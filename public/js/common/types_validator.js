@@ -55,6 +55,10 @@ export function validateEvent(v) {
             validateLeaderboardUpdateEvent(v);
             break;
         }
+        case "GLOBAL_LEADERBOARD_UPDATE": {
+            validateGlobalLeaderboardUpdateEvent(v);
+            break;
+        }
         case "ENTITY_MOVE": {
             validateEntityMoveEvent(v);
             break;
