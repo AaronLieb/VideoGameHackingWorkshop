@@ -170,6 +170,25 @@ export function validateLevelScore(v: any): t.LevelScore {
     return v as t.LevelScore;
 }
 
+// validateGlobalLeaderboardUpdateEvent validates the needed type constraints
+// from v and cast it to GlobalLeaderboardUpdateEvent.
+export function validateGlobalLeaderboardUpdateEvent(v: any): t.GlobalLeaderboardUpdateEvent {
+    if (v.type !== "GLOBAL_LEADERBOARD_UPDATE") throw new ValidationError("missing v.type");
+    if (typeof v.d !== "object") throw new ValidationError("missing v.d");
+
+    return v as t.GlobalLeaderboardUpdateEvent;
+}
+
+// validateGlobalScore validates the needed type constraints
+// from v and cast it to GlobalScore.
+export function validateGlobalScore(v: any): t.GlobalScore {
+    if (typeof v.rank !== "number") throw new ValidationError("missing v.rank");
+    if (typeof v.username !== "string") throw new ValidationError("missing v.username");
+    if (typeof v.score !== "number") throw new ValidationError("missing v.score");
+
+    return v as t.GlobalScore;
+}
+
 // validateEntityPositionData validates the needed type constraints
 // from v and cast it to EntityPositionData.
 export function validateEntityPositionData(v: any): t.EntityPositionData {
@@ -220,7 +239,7 @@ export function validateCommand(v: any): t.Command {
 export function validateJoinCommand(v: any): t.JoinCommand {
     if (v.type !== "JOIN") throw new ValidationError("missing v.type");
     if (v.d === undefined) throw new ValidationError("missing v.d");
-    if (typeof v.d.level !== "number") throw new ValidationError("missing v.d.level");
+    if (v.d.level === undefined) throw new ValidationError("missing v.d.level");
 
     return v as t.JoinCommand;
 }

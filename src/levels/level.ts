@@ -4,6 +4,7 @@ import {
     BlockType,
     Command,
     LevelFinishedEvent,
+    LevelInfo,
     Millisecond,
     TickDuration,
     Vector,
@@ -20,7 +21,19 @@ export interface Info {
     readonly number: number;
     readonly name: string | undefined;
     readonly desc: string | undefined;
+    readonly weight?: number; // default 1.0
     readonly hidden?: boolean;
+}
+
+// ConvertToLevelInfo converts an object that implements Info to a LevelInfo
+// object.
+export function ConvertToLevelInfo(info: Info): LevelInfo {
+    return {
+        number: info.number,
+        name: info.name,
+        desc: info.desc,
+        weight: info.weight,
+    };
 }
 
 // Level describes a level with all its server logic.

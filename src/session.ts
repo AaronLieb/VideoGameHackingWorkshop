@@ -1,7 +1,8 @@
 import { Command } from "/src/common/types.ts";
 import * as ws from "/src/ws.ts";
 import * as store from "/src/store.ts";
-import * as level from "/src/level.ts";
+import * as score from "/src/common/score.ts";
+import * as level from "/src/levels/level.ts";
 import * as levels from "/src/levels/levels.ts";
 
 export class Session {
@@ -30,17 +31,7 @@ export class Session {
                     type: "HELLO",
                     d: {
                         username: this.username,
-                        levels: levels.ConvertInfo((level) => {
-                            if (level.hidden) {
-                                return;
-                            }
-
-                            return {
-                                number: level.number,
-                                name: level.name,
-                                desc: level.desc,
-                            };
-                        }),
+                        levels: levels.LevelInfo(),
                     },
                 });
                 break;
@@ -63,24 +54,20 @@ export class Session {
                     return;
                 }
 
-                const level = levels.Info.get(cmd.d.level);
-                if (!level) {
+                const levelInfo = levels.Info.get(cmd.d.level);
+                if (!levelInfo) {
                     throw `unknown level ${cmd.d.level}`;
                 }
 
-                this.currentLevel = level.new(this);
+                this.currentLevel = levelInfo.new(this);
 
                 server.send({
                     type: "LEVEL_JOINED",
                     d: {
-                        level: level.number,
-                        info: {
-                            number: level.number,
-                            name: level.name,
-                            desc: level.desc,
-                        },
-                        raw: level.map.raw,
-                        metadata: level.map.metadata,
+                        level: levelInfo.number,
+                        info: level.ConvertToLevelInfo(levelInfo),
+                        raw: levelInfo.map.raw,
+                        metadata: levelInfo.map.metadata,
                     },
                 });
                 break;
@@ -104,6 +91,16 @@ export class Session {
             this.wsPool.emit({
                 type: "LEADERBOARD_UPDATE",
                 d: [leaderboard],
+            });
+
+            const bestTimes = await this.store.userBestTimes(this.username);
+            const playerScore = score.CalculateScores(bestTimes, levels.Info);
+            await this.store.setGlobalScore(this.username, playerScore);
+
+            const globalLeaderboard = await this.store.globalLeaderboard();
+            this.wsPool.emit({
+                type: "GLOBAL_LEADERBOARD_UPDATE",
+                d: globalLeaderboard,
             });
         }
     }

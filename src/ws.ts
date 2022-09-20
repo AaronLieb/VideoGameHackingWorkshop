@@ -17,14 +17,10 @@ export class ServerPool {
     constructor() {
     }
 
-    async emit(ev: Event) {
-        const sendings = this.servers.map((server) =>
-            new Promise((done) => {
-                server.send(ev);
-                done(undefined);
-            })
-        );
-        await Promise.all(sendings);
+    emit(ev: Event) {
+        for (const server of this.servers) {
+            server.send(ev);
+        }
     }
 
     // connect wraps the given WebSocket and returns a new Server.

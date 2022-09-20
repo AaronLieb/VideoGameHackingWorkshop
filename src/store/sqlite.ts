@@ -1,16 +1,22 @@
-import { Leaderboards, LevelLeaderboard, Millisecond, PersonalScore } from "/src/common/types.ts";
+import { GlobalScore, Leaderboards, LevelLeaderboard, Millisecond, PersonalScore } from "/src/common/types.ts";
 import { sqlite } from "/src/deps.ts";
 import * as store from "/src/store.ts";
 
 const schemas = [`
 PRAGMA strict = ON;
+PRAGMA synchronous = FULL;
 
 CREATE TABLE leaderboards (
 	level INTEGER NOT NULL,
-	username TEXT NOT NULL,
+	username TEXT NOT NULL REFERENCES players(username) ON UPDATE CASCADE,
 	best_time INTEGER NOT NULL,
 
 	UNIQUE(level, username)
+);
+
+CREATE TABLE players (
+	username TEXT PRIMARY KEY,
+	global_score FLOAT NOT NULL DEFAULT 0
 );
 `];
 
@@ -47,12 +53,24 @@ async function open(path: string): Promise<SQLiteStore> {
 export class SQLiteStore implements store.Storer {
     constructor(private readonly db: sqlite.Shell) {}
 
-    close(): Promise<void> {
-        this.db.close();
-        return new Promise((done) => done());
+    async close(): Promise<void> {
+        await this.db.close();
+    }
+
+    async initUser(username: string): Promise<void> {
+        await this.db.execute(
+            `
+			INSERT INTO players (username) VALUES (?)
+				ON CONFLICT DO NOTHING;
+			`,
+            [username],
+        );
     }
 
     async setScore(level: number, username: string, bestTime: Millisecond): Promise<PersonalScore | undefined> {
+        // Ensure the user exists.
+        await this.initUser(username);
+
         const changedRows = await this.db.queryAll(
             `
 			INSERT INTO leaderboards (level, username, best_time) VALUES (?, ?, ?)
@@ -68,11 +86,18 @@ export class SQLiteStore implements store.Storer {
             return;
         }
 
-        return await this.userScore(level, username);
+        return await this.userBestTime(level, username);
     }
 
-    async userScore(level: number, username: string): Promise<PersonalScore | undefined> {
-        const rows = this.db.query(
+    async setGlobalScore(username: string, globalScore: number): Promise<void> {
+        await this.db.execute(
+            `REPLACE INTO players (username, global_score) VALUES (?, ?);`,
+            [username, globalScore],
+        );
+    }
+
+    async userBestTime(level: number, username: string): Promise<PersonalScore | undefined> {
+        const rows = await this.db.queryAll(
             `
 			SELECT * FROM (
 				SELECT RANK() OVER (ORDER BY best_time ASC) AS rank, best_time
@@ -83,23 +108,46 @@ export class SQLiteStore implements store.Storer {
 			`,
             [level, username],
         );
+        if (!rows) {
+            return;
+        }
 
-        for await (const row of rows) {
-            const r = row as {
-                rank: number;
+        const r = rows[0] as {
+            rank: number;
+            best_time: number;
+        };
+
+        return {
+            level: level,
+            rank: r.rank,
+            bestTime: r.best_time,
+        };
+    }
+
+    async userBestTimes(username: string): Promise<Map<number, number>> {
+        const rows = this.db.query(
+            `
+			SELECT level, best_time
+				FROM leaderboards
+				WHERE username = ?;
+			`,
+            [username],
+        );
+
+        const scores = new Map<number, number>();
+
+        for await (const rawRow of rows) {
+            const row = rawRow as {
+                level: number;
                 best_time: number;
             };
-
-            return {
-                level: level,
-                rank: r.rank,
-                bestTime: r.best_time,
-            };
+            scores.set(row.level, row.best_time);
         }
+
+        return scores;
     }
 
     async leaderboard(level: number): Promise<LevelLeaderboard> {
-        // SELECT RANK() OVER (ORDER BY best_time ASC) AS n, * FROM leaderboards;
         const rows = this.db.query(
             `
 			SELECT RANK() OVER (ORDER BY best_time ASC) AS rank, username, best_time
@@ -146,5 +194,32 @@ export class SQLiteStore implements store.Storer {
         leaderboards.sort((l1, l2) => l1.level - l2.level);
 
         return leaderboards;
+    }
+
+    async globalLeaderboard(): Promise<GlobalScore[]> {
+        const rows = this.db.query(
+            `
+			SELECT RANK() OVER (ORDER BY global_score DESC) AS rank, username, global_score
+				FROM players
+				LIMIT 25;
+			`,
+        );
+
+        const scores: GlobalScore[] = [];
+
+        for await (const rawRow of rows) {
+            const row = rawRow as {
+                rank: number;
+                username: string;
+                global_score: number;
+            };
+            scores.push({
+                rank: row.rank,
+                username: row.username,
+                score: row.global_score,
+            });
+        }
+
+        return scores;
     }
 }

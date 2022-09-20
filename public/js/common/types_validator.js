@@ -212,6 +212,31 @@ export function validateLevelScore(v) {
     }
     return v;
 }
+// validateGlobalLeaderboardUpdateEvent validates the needed type constraints
+// from v and cast it to GlobalLeaderboardUpdateEvent.
+export function validateGlobalLeaderboardUpdateEvent(v) {
+    if (v.type !== "GLOBAL_LEADERBOARD_UPDATE") {
+        throw new ValidationError("missing v.type");
+    }
+    if (typeof v.d !== "object") {
+        throw new ValidationError("missing v.d");
+    }
+    return v;
+}
+// validateGlobalScore validates the needed type constraints
+// from v and cast it to GlobalScore.
+export function validateGlobalScore(v) {
+    if (typeof v.rank !== "number") {
+        throw new ValidationError("missing v.rank");
+    }
+    if (typeof v.username !== "string") {
+        throw new ValidationError("missing v.username");
+    }
+    if (typeof v.score !== "number") {
+        throw new ValidationError("missing v.score");
+    }
+    return v;
+}
 // validateEntityPositionData validates the needed type constraints
 // from v and cast it to EntityPositionData.
 export function validateEntityPositionData(v) {
@@ -272,7 +297,7 @@ export function validateJoinCommand(v) {
     if (v.d === undefined) {
         throw new ValidationError("missing v.d");
     }
-    if (typeof v.d.level !== "number") {
+    if (v.d.level === undefined) {
         throw new ValidationError("missing v.d.level");
     }
     return v;

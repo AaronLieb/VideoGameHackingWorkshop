@@ -152,6 +152,7 @@ export type Event =
     | LevelFinishedEvent
     | PersonalScoresEvent
     | LeaderboardUpdateEvent
+    | GlobalLeaderboardUpdateEvent
     | EntityMoveEvent
     | { type: "_open" }
     | { type: "_close"; code: number };
@@ -161,6 +162,7 @@ export type LevelInfo = {
     number: number;
     name?: string;
     desc?: string;
+    weight?: number;
 };
 
 // HelloEvent is the first ever event coming from the server. Contains all the
@@ -243,6 +245,19 @@ export type LevelScore = {
     rank: number;
     username: string;
     bestTime: Millisecond;
+};
+
+// GlobalLeaderboardUpdateEvent is emitted when the global leaderboard changes.
+export type GlobalLeaderboardUpdateEvent = {
+    readonly type: "GLOBAL_LEADERBOARD_UPDATE";
+    d: GlobalScore[];
+};
+
+// GlobalScore is a score entry in the global leaderboard.
+export type GlobalScore = {
+    rank: number;
+    username: string;
+    score: number;
 };
 
 // EntityPositionData describes a position of an entity. The entity is

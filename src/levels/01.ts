@@ -1,5 +1,5 @@
 import { BlockPosition, MapBackgroundMode, MapMetadata, Vector } from "/src/common/types.ts";
-import * as level from "/src/level.ts";
+import * as level from "/src/levels/level.ts";
 import * as session from "/src/session.ts";
 import * as entity from "/src/common/entity.ts";
 import * as map from "/src/common/map.ts";

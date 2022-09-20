@@ -1,5 +1,6 @@
+import { LevelInfo } from "/src/common/types.ts";
 import * as map from "/src/common/map.ts";
-import * as level from "/src/level.ts";
+import * as level from "/src/levels/level.ts";
 import * as level1 from "/src/levels/01.ts";
 import * as level99 from "/src/levels/99.ts";
 
@@ -9,11 +10,20 @@ export const Info = new Map<number, level.Info>();
 // Maps contains all known maps.
 export const Maps = new Map<number, map.LevelMap>();
 
+// LevelInfo converts all of Into to LevelInfo[].
+export function LevelInfo(): LevelInfo[] {
+    return ConvertInfo(level.ConvertToLevelInfo);
+}
+
 // ConvertInfo maps all Info to a list of other types, similarly to calling
 // Info.
-export function ConvertInfo<T>(f: (_: level.Info) => T | undefined): T[] {
+export function ConvertInfo<T>(f: (_: level.Info) => T | undefined, showHidden = false): T[] {
     const values: T[] = [];
     Info.forEach((info) => {
+        if (!showHidden && info.hidden) {
+            return;
+        }
+
         const v = f(info);
         if (v) {
             values.push(v);
