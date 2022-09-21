@@ -100,7 +100,7 @@ export class Level {
     }
 
     #spawnFrank() {
-        const frank = new RainingFrank(this.game.width, this.game.height);
+        const frank = new RainingFrank(this.game);
         this.addSprite(frank);
     }
 }

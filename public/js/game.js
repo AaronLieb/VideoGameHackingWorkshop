@@ -4,9 +4,6 @@ import { BlockSize } from "/public/js/common/types.js";
 export const canvasSize = { w: 640, h: 400 };
 
 export class Game extends PIXI.Application {
-    width;
-    height;
-
     constructor() {
         super({
             width: canvasSize.w,
@@ -24,9 +21,14 @@ export class Game extends PIXI.Application {
         );
         this.stage.scale.set(scale);
         this.resize();
+    }
 
-        this.width = this.screen.width / BlockSize;
-        this.height = this.screen.height / BlockSize;
+    get width() {
+        return this.screen.width / this.stage.scale.x / BlockSize;
+    }
+
+    get height() {
+        return this.screen.height / this.stage.scale.y / BlockSize;
     }
 }
 
