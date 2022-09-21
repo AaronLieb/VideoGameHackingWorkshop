@@ -1,6 +1,7 @@
 import { BlockPosition, MapBackgroundMode, MapMetadata, Vector } from "/src/common/types.ts";
 import * as level from "/src/levels/level.ts";
 import * as session from "/src/session.ts";
+import * as platform from "/src/levels/entity/platform.ts";
 import * as entity from "/src/levels/entity/entity.ts";
 import * as map from "/src/common/map.ts";
 
@@ -85,7 +86,7 @@ export const Info: level.Info = {
 };
 
 export class Level extends level.Level {
-    platforms: platformEntity[];
+    platforms: platform.Entity[];
 
     constructor(session: session.Session) {
         super(Info, session);
@@ -93,28 +94,6 @@ export class Level extends level.Level {
         this.initializeEntity("P", (pos: Vector) => new entity.Entity("P", pos));
         this.initializeEntity("B", (pos: Vector) => new entity.Entity("B", pos));
 
-        this.platforms = this.initializeEntity("-", (pos: Vector) => new platformEntity("-", pos));
-    }
-}
-
-class platformEntity extends entity.Entity {
-    private endBound: Vector;
-
-    constructor(block: string, pos: Vector) {
-        super(block, pos);
-        this.endBound = {
-            x: pos.x + 5,
-            y: pos.y,
-        };
-    }
-
-    tick(delta = 1) {
-        if (this.position.x >= this.endBound.x) {
-            this.velocity.x = -0.1;
-        } else if (this.position.x <= this.initialPosition.x) {
-            this.velocity.x = +0.1;
-        }
-
-        super.tick(delta);
+        this.platforms = this.initializeEntity("-", (pos: Vector) => new platform.Entity("-", pos));
     }
 }
