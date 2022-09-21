@@ -1,10 +1,6 @@
 import { Block, Vector } from "/src/common/types.ts";
 
-export function VecEq(v1: Vector, v2: Vector): boolean {
-    return v1.x == v2.x && v1.y == v2.y;
-}
-
-export class Entity {
+export interface Entity {
     readonly block: Block;
     readonly initialPosition: Vector;
 
@@ -12,15 +8,6 @@ export class Entity {
     velocity: Vector;
     acceleration: Vector;
 
-    constructor(block: Block, pos: Vector) {
-        this.block = block;
-        this.position = pos;
-        this.velocity = { x: 0, y: 0 };
-        this.acceleration = { x: 0, y: 0 };
-        this.initialPosition = { ...pos }; // copy to avoid mutation
-    }
-
-    tick(_deltaTime = 1) {}
+    // tick is called on every engine tick. The entity should update itself.
+    tick(delta: number): void;
 }
-
-export const Null = new Entity(" ", { x: -1, y: -1 });

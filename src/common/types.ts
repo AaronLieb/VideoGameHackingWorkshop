@@ -14,6 +14,18 @@ export type Vector = {
     y: number;
 };
 
+// ZP constructs a zero point constant.
+export function ZP(): Vector {
+    return { x: 0, y: 0 };
+}
+
+// VecEq returns true if v1 and v2 are the same point (i.e. they point to the
+// same exact position).
+export function VecEq(v1: Vector, v2: Vector, epsilon = 0): boolean {
+    if (epsilon === 0) return v1.x == v2.x && v1.y == v2.y;
+    return Math.abs(v1.x - v2.x) <= epsilon && Math.abs(v1.y - v2.y) <= epsilon;
+}
+
 // Block describes a single character in a map that corresponds to the
 // declared objects in its metadata.
 export type Block = string | " ";

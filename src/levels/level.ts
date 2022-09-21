@@ -11,7 +11,7 @@ import {
 } from "/src/common/types.ts";
 import * as physics from "/src/common/physics.ts";
 import * as session from "/src/session.ts";
-import * as entity from "/src/common/entity.ts";
+import * as entity from "/src/levels/entity/entity.ts";
 import * as map from "/src/common/map.ts";
 import * as ws from "/src/ws.ts";
 
