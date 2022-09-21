@@ -1,5 +1,6 @@
 import { PIXI } from "/public/js/deps.js";
 import { BlockSize, ZP } from "/public/js/common/types.js";
+import { Entity as CommonEntity } from "/public/js/common/entity.js";
 import { AssetPath } from "/public/js/common/map.js";
 
 export function SpriteFromAsset(assetID, mods = [], opts = undefined) {
@@ -36,16 +37,18 @@ export function SpriteFromTexture(texture, mods = [], opts = undefined) {
     return sprite;
 }
 
-export class Entity {
+export class Entity extends CommonEntity {
     mods; // readonly
     block; // readonly
     sprite;
     initialPosition; // readonly
 
-    velocity; // Vecetor
+    velocity; // Vector
     acceleration; // Vector
 
     constructor(block, pos, spriteOrAssetID, mods = []) {
+        super();
+
         let sprite = spriteOrAssetID;
         if (typeof sprite == "string") {
             sprite = SpriteFromAsset(spriteOrAssetID, mods);
@@ -56,9 +59,9 @@ export class Entity {
         this.sprite = sprite;
         this.initialPosition = { ...pos }; // copy to prevent mutation
 
+        this.position = pos;
         this.velocity = ZP();
         this.acceleration = ZP();
-        this.position = pos;
     }
 
     set position(pos) {
@@ -67,11 +70,31 @@ export class Entity {
     }
 
     get position() {
-        return {
-            x: this.sprite.x / BlockSize,
-            y: this.sprite.y / BlockSize,
-        };
+        return new positionOverrider(this.sprite);
+    }
+}
+
+// positionOverrider overrides Entity.position to provide block size scaling
+// seamlessly.
+class positionOverrider {
+    sprite;
+    constructor(sprite) {
+        this.sprite = sprite;
     }
 
-    tick(_delta) {}
+    set x(x) {
+        this.sprite.x = x * BlockSize;
+    }
+
+    get x() {
+        return this.sprite.x / BlockSize;
+    }
+
+    set y(y) {
+        this.sprite.y = y * BlockSize;
+    }
+
+    get y() {
+        return this.sprite.y / BlockSize;
+    }
 }

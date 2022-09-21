@@ -38,7 +38,7 @@ export function ConvertToLevelInfo(info: Info): LevelInfo {
 
 // Level describes a level with all its server logic.
 export class Level {
-    protected entities = new Map<Vector, entity.Entity>();
+    protected entities: entity.Entity[] = [];
     protected physics: physics.Engine;
     protected player: entity.Entity = entity.Null;
     protected readonly map: map.LevelMap;
@@ -54,7 +54,7 @@ export class Level {
         this.number = info.number;
         this.session = session;
         this.startsAt = Date.now();
-        this.physics = new physics.Engine(this.map);
+        this.physics = new physics.Engine(this.map, this.entities);
         this.tickID = setInterval(() => this.tick(), TickDuration);
     }
 
@@ -73,7 +73,7 @@ export class Level {
         this.map.iterateEntity(block, (pos: Vector, assetID: string) => {
             const ent = newFn(pos);
 
-            this.entities.set(pos, ent);
+            this.entities.push(ent);
             entities.push(ent);
 
             if (assetID == "player") {
@@ -85,7 +85,7 @@ export class Level {
     }
 
     protected addEntity(entity: entity.Entity) {
-        this.entities.set(entity.initialPosition, entity);
+        this.entities.push(entity);
 
         const asset = this.map.blockAsset(entity.block, BlockPosition.Floating, BlockType.Entity);
         if (asset == "player") {
@@ -111,7 +111,7 @@ export class Level {
     }
 
     tick(deltaTime = 1) {
-        const diff = this.physics.tickEntities(this.entities, deltaTime);
+        const diff = this.physics.tick(deltaTime);
         if (diff.length > 0) {
             const data = diff.map((entity) => ({
                 initialPosition: entity.initialPosition,

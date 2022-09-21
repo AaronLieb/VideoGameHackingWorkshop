@@ -156,9 +156,9 @@ export class LevelMap {
     }
     // at looks up a block's object by the coordinates.
     at(pos) {
-        const line = this.lines[pos.y];
+        const line = this.lines[Math.round(pos.y)];
         if (line) {
-            return line[pos.x];
+            return line[Math.round(pos.x)];
         }
     }
     assetAt(pos, type = BlockType.Block) {

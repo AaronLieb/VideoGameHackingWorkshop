@@ -120,7 +120,10 @@ export type BlockModifier =
     | "goal"
     // fixed forces the renderer to render this object at a fixed position by
     // stretching the texture into the regions covered by 32x32 blocks.
-    | "fixed";
+    | "fixed"
+    // floating applies to an entity. Entities that are floating means that they
+    // won't be pulled down by gravity.
+    | "floating";
 
 // RawMap is the entire map described as an array of map lines. The length of
 // this array is guaranteed to be equal to the height in the metadata.

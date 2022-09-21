@@ -69,6 +69,7 @@ const metadata: MapMetadata = {
     blockMods: {
         "G": ["air", "goal", "fixed"],
         "g": ["air", "goal"],
+        "-": platform.Entity.mods,
     },
     backgrounds: [
         { asset: "bg3", mode: MapBackgroundMode.Tiled },

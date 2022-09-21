@@ -1,16 +1,17 @@
 import { Entity } from "/src/common/entity.ts";
-import { BlockType, Vector } from "/src/common/types.ts";
+import { BlockType, VecEq, Vector, ZP } from "/src/common/types.ts";
 import { LevelMap } from "/src/common/map.ts";
 
 export class Engine {
-    readonly gravity = 0.3;
+    static readonly gravity = 0.050;
+    static readonly frictionCoef = -0.150;
 
-    constructor(readonly map: LevelMap) {}
+    constructor(readonly map: LevelMap, readonly entities: Entity[]) {}
 
-    tickEntities(entities: Map<Vector, Entity>, deltaTime = 0): Entity[] {
+    tick(deltaTime = 1): Entity[] {
         const updates = [];
 
-        for (const [_, entity] of entities) {
+        for (const entity of this.entities) {
             const pos = { ...entity.position }; // copy so tickEntity can mutate
             this.tickEntity(entity, deltaTime);
             if (pos.x != entity.position.x || pos.y != entity.position.y) {
@@ -22,25 +23,54 @@ export class Engine {
     }
 
     tickEntity(entity: Entity, deltaTime = 1) {
-        const isGrounded = this.isGrounded(entity);
-        if (isGrounded) {
-            entity.velocity.y = 0;
-            entity.acceleration.y = 0;
+        entity.tick(deltaTime);
+
+        // accel is for gravity or friction accel.
+        const accel = ZP();
+
+        let grounded = false;
+        if (!entity.floating) {
+            grounded = this.isGrounded(entity);
+            if (grounded) {
+                // As long as the entity is skidding along the ground, we want
+                // to apply friction so that the object slows down, meaning we
+                // decelerate the object.
+                //
+                // We avoid modifying entity's acceleration here, because we
+                // don't actually want to override the entity's acceleration.
+                if (entity.velocity.x != 0) {
+                    accel.x = entity.velocity.x * Engine.frictionCoef;
+                }
+                // Don't allow the object to go past the ground.
+                entity.velocity.y = 0;
+            } else {
+                // The object is airbourne. Apply acceleration downwards so that
+                // it falls to the ground.
+                accel.y = Engine.gravity;
+            }
         }
 
-        entity.velocity.x += entity.acceleration.x * deltaTime;
-        entity.velocity.y += entity.acceleration.y * deltaTime;
-
-        entity.tick(deltaTime);
+        entity.velocity.x += (entity.acceleration.x + accel.x) * deltaTime;
+        entity.velocity.y += (entity.acceleration.y + accel.y) * deltaTime;
 
         entity.position.x += entity.velocity.x * deltaTime;
         entity.position.y += entity.velocity.y * deltaTime;
+
+        // TODO: write collision logic here.
+        // TOOD: remove isGrounded logic, since we'd already be checking entity
+        // collision with the ground.
     }
 
     isGrounded(entity: Entity): boolean {
-        return false ||
-            this.positionIsGround({ x: Math.ceil(entity.position.x), y: Math.ceil(entity.position.y) }) ||
-            this.positionIsGround({ x: Math.ceil(entity.position.x), y: Math.ceil(entity.position.y) - 1 });
+        const lEdge = this.positionIsGround({
+            x: Math.floor(entity.position.x) + 0,
+            y: Math.floor(entity.position.y) + 1,
+        });
+        const rEdge = this.positionIsGround({
+            x: Math.floor(entity.position.x) + 1,
+            y: Math.floor(entity.position.y) + 1,
+        });
+        return lEdge || rEdge;
     }
 
     private positionIsGround(pos: Vector): boolean {
@@ -50,15 +80,17 @@ export class Engine {
         }
 
         const btype = this.map.blockType(block);
-        if (!btype || btype == BlockType.Entity) {
-            return false;
+        switch (btype) {
+            case BlockType.Block: {
+                const mods = this.map.blockMods(block);
+                return !mods.includes("air");
+            }
+            case BlockType.Entity: {
+                return this.entities.find((entity) => VecEq(entity.position, pos)) !== undefined;
+            }
+            default: {
+                return false;
+            }
         }
-
-        const mods = this.map.blockMods(block);
-        if (mods.includes("air")) {
-            return false;
-        }
-
-        return true;
     }
 }

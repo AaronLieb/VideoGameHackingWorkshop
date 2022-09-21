@@ -23,9 +23,9 @@ export class Level {
     constructor(map) {
         this.map = map;
         this.game = new Game();
-        this.engine = new Engine(this.map);
         this.entities = [];
         this.backgrounds = [];
+        this.engine = new Engine(this.map, this.entities);
 
         if (this.map.metadata.backgrounds) {
             // Iterate from the bottom, which is the bottom-most layer. We keep

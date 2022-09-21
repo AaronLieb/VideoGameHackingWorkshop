@@ -1,11 +1,13 @@
-import { Vector } from "/src/common/types.ts";
+import { BlockModifier, Vector } from "/src/common/types.ts";
 import * as entity from "/src/levels/entity/entity.ts";
 
 export class Entity extends entity.Entity {
-    private endBound: Vector;
+    static readonly mods: BlockModifier[] = ["floating"];
+
+    readonly endBound: Vector;
 
     constructor(block: string, pos: Vector) {
-        super(block, pos);
+        super(block, pos, Entity.mods);
         this.endBound = {
             x: pos.x + 5,
             y: pos.y,

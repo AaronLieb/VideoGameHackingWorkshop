@@ -1,5 +1,5 @@
-import { BlockSize } from "/public/js/common/types.js";
 import { Entity } from "/public/js/entity/entity.js";
+import * as physics from "/public/js/common/physics.js";
 import * as input from "/public/js/input.js";
 
 const playerAssets = [
@@ -10,18 +10,58 @@ const playerAssets = [
 ];
 
 export class Player extends Entity {
+    static walkSpeed = 0.25;
+    static walkAccel = 0.035;
+
+    static jumpHeight = 0.45;
+    static jumpAccel = 0.10;
+
+    jumpFactor = 0;
+
     constructor(block, pos) {
         super(block, pos, playerAssets[0], ["player"]);
     }
 
     tick(delta) {
         super.tick(delta);
-        this.#handleMove(delta);
+        this.#handleMove();
     }
 
-    #handleMove(delta) {
-        if (input.ActionKeys.up) this.velocity.y = -2 * BlockSize * delta;
-        if (input.ActionKeys.left) this.velocity.x = -1 * BlockSize * delta;
-        if (input.ActionKeys.right) this.velocity.x = 1 * BlockSize * delta;
+    #handleMove() {
+        // TODO: use a proper jump curve
+        if (input.ActionKeys.up) {
+            // When I go up, the velocity is actually negative, because the
+            // origin is at the top-left corner.
+            if (this.velocity.y > -Player.jumpHeight) {
+                this.acceleration.y = -Player.jumpAccel;
+            } else {
+                this.acceleration.y = 0;
+            }
+        } else {
+            this.acceleration.y = 0;
+        }
+
+        switch (true) {
+            case input.ActionKeys.right: {
+                if (this.velocity.x < Player.walkSpeed) {
+                    this.acceleration.x = Player.walkAccel;
+                } else {
+                    this.acceleration.x = 0;
+                }
+                break;
+            }
+            case input.ActionKeys.left: {
+                if (this.velocity.x > -Player.walkSpeed) {
+                    this.acceleration.x = -Player.walkAccel;
+                } else {
+                    this.acceleration.x = 0;
+                }
+                break;
+            }
+            default: {
+                this.acceleration.x = 0;
+                break;
+            }
+        }
     }
 }
