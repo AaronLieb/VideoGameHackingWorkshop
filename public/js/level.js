@@ -1,9 +1,8 @@
 import { Game } from "/public/js/game.js";
 import { Engine } from "/public/js/common/physics.js";
 import { Player } from "/public/js/entity/player.js";
-import { BlockSize } from "/public/js/common/types.js";
-import { VecEq } from "/public/js/common/entity.js";
-import { SpriteEntity, SpriteFromAsset } from "/public/js/entity/spriteEntity.js";
+import { BlockSize, VecEq } from "/public/js/common/types.js";
+import { Entity, SpriteFromAsset } from "/public/js/entity/entity.js";
 import { RainingFrank } from "/public/js/entity/frank.js";
 import { Background } from "/public/js/entity/background.js";
 import * as input from "/public/js/input.js";
@@ -12,19 +11,21 @@ export class Level {
     map;
     game;
     engine;
-    entities; // Entity[]
-    sprites;
     backgrounds; // Background[]
-    player;
+
+    entities;
+    blocks;
+
+    // Callbacks
+    tickCallback;
     frankCallback;
 
     constructor(map) {
         this.map = map;
         this.game = new Game();
         this.engine = new Engine(this.map);
-
         this.entities = [];
-        this.sprites = [];
+        this.backgrounds = [];
 
         if (this.map.metadata.backgrounds) {
             // Iterate from the bottom, which is the bottom-most layer. We keep
@@ -32,15 +33,14 @@ export class Level {
             for (let i = this.map.metadata.backgrounds.length - 1; i >= 0; i--) {
                 const background = new Background(this.map, this.map.metadata.backgrounds[i]);
                 this.game.stage.addChild(background.sprite);
+                this.backgrounds.push(background);
             }
         }
 
-        this.map.iterate((pos, _, assetID) => {
-            const sprite = SpriteFromAsset(assetID);
+        this.map.iterate((pos, _, assetID, mods) => {
+            const sprite = SpriteFromAsset(assetID, mods);
             sprite.x = pos.x * BlockSize;
             sprite.y = pos.y * BlockSize;
-
-            this.sprites.push(sprite);
             this.game.stage.addChild(sprite);
         });
 
@@ -50,12 +50,13 @@ export class Level {
                 this.player = new Player(block, pos);
                 sprite = this.player;
             } else {
-                sprite = new SpriteEntity(block, pos, SpriteFromAsset(assetID, mods));
+                sprite = new Entity(block, pos, assetID, mods);
             }
-            this.addSprite(sprite);
+            this.addEntity(sprite);
         });
 
-        this.game.ticker.add((delta) => this.tick(delta));
+        this.tickCallback = (delta) => this.tick(delta);
+        this.game.ticker.add(this.tickCallback);
 
         // We need this for Set's internal equality check.
         this.frankCallback = () => this.#spawnFrank();
@@ -65,22 +66,29 @@ export class Level {
     destroy() {
         input.unregisterSecret("FRNK", this.frankCallback);
 
-        this.game.ticker.remove(this.tick);
+        this.game.ticker.remove(this.tickCallback);
         this.game.destroy();
     }
 
-    addSprite(entity) {
-        this.sprites.push(entity.sprite);
+    addEntity(entity) {
         this.entities.push(entity);
         this.game.stage.addChild(entity.sprite);
+    }
+
+    removeEntity(entity) {
+        const idx = this.entities.indexOf(entity);
+        if (idx != -1) {
+            this.entities.splice(idx, 1);
+            this.game.stage.removeChild(entity.sprite);
+        }
     }
 
     handleEvent(_ws, ev) {
         switch (ev.type) {
             case "ENTITY_MOVE": {
                 for (const update of ev.d.entities) {
-                    const entity = this.entities.find((entity) => {
-                        return VecEq(entity.initialPosition, update.initialPosition);
+                    const entity = this.entities.find((sprite) => {
+                        return VecEq(sprite.initialPosition, update.initialPosition);
                     });
                     if (!entity) {
                         console.error("skipping unknown entity at", update.initialPosition);
@@ -94,13 +102,13 @@ export class Level {
     }
 
     tick(delta) {
-        for (const ent of this.entities) {
-            this.engine.tickEntity(ent, delta);
+        for (const entity of this.entities) {
+            this.engine.tickEntity(entity, delta);
         }
     }
 
     #spawnFrank() {
         const frank = new RainingFrank(this.game);
-        this.addSprite(frank);
+        this.addEntity(frank);
     }
 }

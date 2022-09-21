@@ -1,7 +1,7 @@
-import { SpriteEntity, SpriteFromAsset } from "/public/js/entity/spriteEntity.js";
+import { Entity } from "/public/js/entity/entity.js";
 import { BlockSize } from "/public/js/common/types.js";
 
-export class RainingFrank extends SpriteEntity {
+export class RainingFrank extends Entity {
     speed;
     angle;
     angleSpeed;
@@ -13,7 +13,7 @@ export class RainingFrank extends SpriteEntity {
             x: (Math.random() * (game.width - 2)) + 1,
             y: 0,
         };
-        super("\x00", pos, SpriteFromAsset("frank"));
+        super("\x00", pos, "frank");
         console.log("it's raining franks!", pos);
 
         this.sprite.angle = Math.random() * 360;

@@ -1,13 +1,6 @@
 import { BlockSize } from "/public/js/common/types.js";
-import { SpriteEntity, SpriteFromAsset } from "/public/js/entity/spriteEntity.js";
+import { Entity } from "/public/js/entity/entity.js";
 import * as input from "/public/js/input.js";
-
-function playerMove(delta) {
-    if (input.ActionKeys.jump) this.velocity.y = -2 * BlockSize;
-    if (input.ActionKeys.up) this.velocity.y = -2 * BlockSize;
-    if (input.ActionKeys.left) this.velocity.x = -1 * BlockSize;
-    if (input.ActionKeys.right) this.velocity.x = 1 * BlockSize;
-}
 
 const playerAssets = [
     "player1",
@@ -16,8 +9,19 @@ const playerAssets = [
     "player4",
 ];
 
-export class Player extends SpriteEntity {
+export class Player extends Entity {
     constructor(block, pos) {
-        super(block, pos, SpriteFromAsset(playerAssets[0]));
+        super(block, pos, playerAssets[0], ["player"]);
+    }
+
+    tick(delta) {
+        super.tick(delta);
+        this.#handleMove(delta);
+    }
+
+    #handleMove(delta) {
+        if (input.ActionKeys.up) this.velocity.y = -2 * BlockSize * delta;
+        if (input.ActionKeys.left) this.velocity.x = -1 * BlockSize * delta;
+        if (input.ActionKeys.right) this.velocity.x = 1 * BlockSize * delta;
     }
 }

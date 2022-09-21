@@ -3,6 +3,18 @@
 
 export const TickRate = 30;
 export const TickDuration = 1000 / TickRate;
+// ZP constructs a zero point constant.
+export function ZP() {
+    return { x: 0, y: 0 };
+}
+// VecEq returns true if v1 and v2 are the same point (i.e. they point to the
+// same exact position).
+export function VecEq(v1, v2, epsilon = 0) {
+    if (epsilon === 0) {
+        return v1.x == v2.x && v1.y == v2.y;
+    }
+    return Math.abs(v1.x - v2.x) <= epsilon && Math.abs(v1.y - v2.y) <= epsilon;
+}
 // BlockSize is the size of one block in pixels. One unit of Position in either
 // axis will equal to one block, which should be 32 pixels. The pixels do not
 // have to correspond to physical pixels, but all textures should be mapped to
