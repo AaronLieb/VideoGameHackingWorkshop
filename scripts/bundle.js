@@ -75,34 +75,27 @@ async function bundleDirectory(src, dst, opts) {
         srcFiles.push(srcFile);
     }
 
-    let changed = false;
-    for (const srcFile of srcFiles) {
-        const srcPath = paths(src, srcFile.name);
-        const dstPath = paths(dst, srcFile.name.replace(".ts", ".js"));
-
-        const srcCont = await Deno.readFile(srcPath);
-        const srcHash = hashbytes(srcCont);
-
-        if (hashedOutput[srcPath] !== srcHash) {
-            changed = true;
-            break;
-        }
-
-        // Confirm that the file still exists.
-        try {
-            await Deno.stat(dstPath);
-        } catch (_) {
-            changed = true;
-            break;
-        }
-    }
-
-    if (!changed) {
-        return false;
-    }
-
-    await Deno.remove(dst, { recursive: true }).catch((_) => {/* do nothing */});
     await Deno.mkdir(dst, { recursive: true });
+
+    // Before we bother caching anything, we must guarantee that:
+    //
+    //    1. The output directory does not contain any extra files, and
+    //    2. All new files in the input directory must be bundled.
+    //
+    // We try to remove extra files in the output directory here. Files that
+    // don't exist will be automatically picked up by bundleFile.
+    const dstFilesIter = Deno.readDir(dst);
+    for await (const dstFile of dstFilesIter) {
+        const srcPath = paths(src, dstFile.name.replace(".js", ".ts"));
+        const dstPath = paths(dst, dstFile.name);
+
+        try {
+            await Deno.lstat(srcPath);
+        } catch (_) {
+            console.log("purging unknown file at", dstPath);
+            await Deno.remove(dstPath);
+        }
+    }
 
     for (const srcFile of srcFiles) {
         await bundleFile(src, dst, srcFile, opts);
@@ -120,15 +113,19 @@ async function bundleFile(src, dst, srcFile, opts) {
         return;
     }
 
-    console.log("bundling", srcPath);
-
     if (srcFile.isDirectory) {
         bundleDirectory(srcPath, dstPath, opts);
         return;
     }
 
-    const srcContent = await Deno.readFile(srcPath);
-    const srcHash = hashbytes(srcContent);
+    const srcCont = await Deno.readFile(srcPath);
+    const srcHash = hashbytes(srcCont);
+
+    if (hashedOutput[srcPath] === srcHash) {
+        return;
+    }
+
+    console.log("bundling", srcPath);
     hashedOutput[srcPath] = srcHash;
 
     // Fuck it. The TypeScript people can go suck my nuts.
