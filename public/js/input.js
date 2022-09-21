@@ -135,7 +135,9 @@ function updateKeyboard(keyName) {
     const actionKey = ActionKeyMap[keyName];
     if (actionKey) {
         ActionKeys[actionKey] = Keyboard[keyName];
+        return true;
     }
+    return false;
 }
 
 self.addEventListener("keydown", function (e) {
@@ -152,7 +154,9 @@ self.addEventListener("keydown", function (e) {
     }
 
     if (Keyboard.active) {
-        updateKeyboard(keyName);
+        if (updateKeyboard(keyName)) {
+            e.preventDefault();
+        }
         runUpdateHooks(e);
     }
 });
@@ -162,7 +166,9 @@ self.addEventListener("keyup", function (e) {
     Keyboard[keyName] = false;
 
     if (Keyboard.active) {
-        updateKeyboard(keyName);
+        if (updateKeyboard(keyName)) {
+            e.preventDefault();
+        }
         runUpdateHooks(e);
     }
 });
