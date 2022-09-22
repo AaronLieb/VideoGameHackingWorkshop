@@ -1,4 +1,4 @@
-import { Game } from "/public/js/game.js";
+import { Game } from "/public/js/game/game.js";
 import { Engine } from "/public/js/common/physics.js";
 import { Player } from "/public/js/entity/player.js";
 import { BlockSize, VecEq } from "/public/js/common/types.js";
