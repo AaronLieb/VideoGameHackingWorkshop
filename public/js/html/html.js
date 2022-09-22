@@ -1,2 +1,5 @@
-import { o } from "/public/js/deps.js";
-export const html = o.x;
+export function ToElement(html) {
+    const tmpl = document.createElement("template");
+    tmpl.innerHTML = html.trim();
+    return tmpl.content.firstChild;
+}

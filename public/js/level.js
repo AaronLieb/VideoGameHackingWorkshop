@@ -57,7 +57,7 @@ export class Level {
         });
 
         this.tickCallback = (delta) => this.tick(delta);
-        Game.ticker.add(this.tickCallback);
+        this.game.engineTicker.add(this.tickCallback);
 
         // We need this for Set's internal equality check.
         this.frankCallback = () => this.#spawnFrank();
@@ -66,7 +66,7 @@ export class Level {
 
     destroy() {
         input.unregisterSecret("FRNK", this.frankCallback);
-        Game.ticker.remove(this.tickCallback);
+        this.game.engineTicker.remove(this.tickCallback);
         this.game.destroy();
     }
 

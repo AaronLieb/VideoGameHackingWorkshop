@@ -1,5 +1,6 @@
 import { PIXI } from "/public/js/deps.js";
 import { BlockSize, TickDuration, TickRate } from "/public/js/common/types.js";
+import * as fps from "/public/js/game/fps.js";
 import * as input from "/public/js/input.js";
 import * as camera from "/public/js/game/camera.js";
 
@@ -17,11 +18,17 @@ PIXI.Ticker.shared.deltaMS = TickDuration;
 // Camera code taken from https://github.com/AaronLieb/acmBall/blob/main/src/Camera.js
 
 export class Game extends PIXI.Application {
-    static ticker = PIXI.Ticker.shared;
-
-    camera;
+    // camera is the game camera instance.
+    camera; // camera.Camera
+    // frameTicker is the ticker instance for rendering the game. It varies
+    // across systems depending on the refresh/rendering rate of the browser.
+    frameTicker; // PIXI.Ticker
+    // engineTicker is the ticker instance for the Physics engine as well as all
+    // its logic. It is fixed to the TickRate defined in types.ts.
+    engineTicker = Game.ticker; // PIXI.Ticker
 
     #toggleFPSCallback;
+    #FPSCounter;
 
     constructor() {
         super({
@@ -33,13 +40,21 @@ export class Game extends PIXI.Application {
         });
 
         this.camera = new camera.Camera(this);
+        this.frameTicker = this.ticker;
+        this.engineTicker = PIXI.Ticker.shared;
 
         this.#toggleFPSCallback = () => this.#toggleFPS();
         input.registerSecret("FPS", this.#toggleFPSCallback);
+        input.registerSecret("TPS", this.#toggleFPSCallback);
     }
 
     destroy() {
+        if (this.#FPSCounter) {
+            this.#toggleFPS();
+        }
+
         input.unregisterSecret("FPS", this.#toggleFPSCallback);
+        input.unregisterSecret("TPS", this.#toggleFPSCallback);
         super.destroy();
     }
 
@@ -77,5 +92,20 @@ export class Game extends PIXI.Application {
         return this.gameY(this.screen.height);
     }
 
-    #toggleFPS() {}
+    #toggleFPS() {
+        if (!this.view.parentNode) {
+            // View doesn't have a parent node yet, meaning it's probably not
+            // visible yet. Just don't do anything.
+            return;
+        }
+
+        if (this.#FPSCounter) {
+            this.view.parentNode.removeChild(this.#FPSCounter.element);
+            this.#FPSCounter.destroy();
+            this.#FPSCounter = undefined;
+        } else {
+            this.#FPSCounter = new fps.Counter(this);
+            this.view.parentNode.appendChild(this.#FPSCounter.element);
+        }
+    }
 }

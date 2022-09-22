@@ -61,6 +61,19 @@ button.outline:hover {
   width: 100%;
   overflow: hidden;
   background-color: black;
+  position: relative;
+}
+
+#game > .game-canvas > .game-fps-counter {
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 0 0.5em;
+  font-size: small;
+  font-family: mono;
+  background: rgba(0, 0, 0, 0.45);
+  color: white;
+  white-space: break-spaces;
 }
 
 #game > .game-controls {
