@@ -1,7 +1,7 @@
 // Millisecond duration type.
 export type Millisecond = number;
 
-export const TickRate = 30;
+export const TickRate = 60;
 export const TickDuration: Millisecond = 1000 / TickRate;
 
 // UnixMilli is the Unix timestamp in milliseconds.

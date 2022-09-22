@@ -15,6 +15,7 @@ export class Level {
 
     entities;
     blocks;
+    player;
 
     // Callbacks
     tickCallback;
@@ -56,7 +57,7 @@ export class Level {
         });
 
         this.tickCallback = (delta) => this.tick(delta);
-        this.game.ticker.add(this.tickCallback);
+        Game.ticker.add(this.tickCallback);
 
         // We need this for Set's internal equality check.
         this.frankCallback = () => this.#spawnFrank();
@@ -65,8 +66,7 @@ export class Level {
 
     destroy() {
         input.unregisterSecret("FRNK", this.frankCallback);
-
-        this.game.ticker.remove(this.tickCallback);
+        Game.ticker.remove(this.tickCallback);
         this.game.destroy();
     }
 
@@ -105,6 +105,7 @@ export class Level {
         for (const entity of this.entities) {
             this.engine.tickEntity(entity, delta);
         }
+        this.game.camera.focus(this.player.position);
     }
 
     #spawnFrank() {
