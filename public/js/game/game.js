@@ -1,5 +1,6 @@
 import { PIXI } from "/public/js/deps.js";
 import { BlockSize, TickDuration, TickRate } from "/public/js/common/types.js";
+import * as idle from "/public/js/internal/idle.js";
 import * as fps from "/public/js/game/fps.js";
 import * as input from "/public/js/input.js";
 import * as camera from "/public/js/game/camera.js";
@@ -27,6 +28,7 @@ export class Game extends PIXI.Application {
     // its logic. It is fixed to the TickRate defined in types.ts.
     engineTicker = Game.ticker; // PIXI.Ticker
 
+    #onIdle;
     #toggleFPSCallback;
     #FPSCounter;
 
@@ -39,9 +41,15 @@ export class Game extends PIXI.Application {
             sharedTicker: false,
         });
 
-        this.camera = new camera.Camera(this);
         this.frameTicker = this.ticker;
         this.engineTicker = PIXI.Ticker.shared;
+
+        this.camera = new camera.Camera(this);
+
+        this.#onIdle = (idle) => {
+            this.frameTicker.maxFPS = idle ? 30 : 0;
+        };
+        idle.onIdle(this.#onIdle);
 
         this.#toggleFPSCallback = () => this.#toggleFPS();
         input.registerSecret("FPS", this.#toggleFPSCallback);
@@ -53,6 +61,8 @@ export class Game extends PIXI.Application {
             this.#toggleFPS();
         }
 
+        this.camera.destroy();
+        idle.removeOnIdle(this.#onIdle);
         input.unregisterSecret("FPS", this.#toggleFPSCallback);
         input.unregisterSecret("TPS", this.#toggleFPSCallback);
         super.destroy();

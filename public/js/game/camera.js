@@ -5,6 +5,9 @@ export class Camera {
     focusBoundsH = 0.90;
     lerp = 0.45;
 
+    #focusTo;
+    #focusCallback;
+
     constructor(game) {
         this.game = game;
         this.stage = game.stage;
@@ -13,6 +16,13 @@ export class Camera {
         this.gameY = game.gameY;
         this.pixiX = game.pixiX;
         this.pixiY = game.pixiY;
+
+        this.#focusCallback = () => this.#update();
+        this.game.frameTicker.add(this.#focusCallback);
+    }
+
+    destroy() {
+        this.game.frameTicker.remove(this.#focusCallback);
     }
 
     get x() {
@@ -31,11 +41,22 @@ export class Camera {
         this.stage.y = this.game.pixiY(y);
     }
 
-    // focus moves the camera so that position is visible on stage.
+    // focus moves the camera so that position is visible on stage. Note that
+    // the camera is not guaranteed to be instantly updated. Never assume that x
+    // or y will return the focused position immediately.
     focus(pt) {
+        this.#focusTo = pt;
+    }
+
+    #update() {
+        if (!this.#focusTo) {
+            return;
+        }
+
         const focusW = this.focusBoundsW * this.game.width;
         const focusH = this.focusBoundsH * this.game.height;
 
+        const pt = this.#focusTo;
         const f = {
             p1: {
                 x: -this.x + (this.game.width / 2) - (focusW / 2),
