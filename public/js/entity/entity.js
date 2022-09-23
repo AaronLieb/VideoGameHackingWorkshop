@@ -3,7 +3,7 @@ import { BlockSize, ZP } from "/public/js/common/types.js";
 import { Entity as CommonEntity } from "/public/js/common/entity.js";
 import { AssetPath } from "/public/js/common/map.js";
 
-export function SpriteFromAsset(assetID, mods = [], opts = undefined) {
+export function TextureFromAsset(assetID) {
     const path = AssetPath(assetID);
 
     let texture;
@@ -13,6 +13,14 @@ export function SpriteFromAsset(assetID, mods = [], opts = undefined) {
         texture = PIXI.Texture.from(path);
     }
 
+    texture.baseTexture.scaleMode = PIXI.SCALE_MODES.NEAREST;
+    texture.baseTexture.mipmap = PIXI.MIPMAP_MODES.POW2;
+    texture.baseTexture.update();
+    return texture;
+}
+
+export function SpriteFromAsset(assetID, mods = [], opts = undefined) {
+    const texture = TextureFromAsset(assetID);
     return SpriteFromTexture(texture, mods, opts);
 }
 
@@ -27,8 +35,6 @@ export function SpriteFromTexture(texture, mods = [], opts = undefined) {
             sprite.scale.set(wscale, hscale);
         };
 
-        sprite.texture.baseTexture.scaleMode = PIXI.SCALE_MODES.NEAREST;
-        sprite.texture.baseTexture.mipmap = PIXI.MIPMAP_MODES.POW2;
         sprite.texture.baseTexture.on("loaded", () => applyScale());
         applyScale();
         sprite.texture.baseTexture.update();
@@ -71,6 +77,20 @@ export class Entity extends CommonEntity {
 
     get position() {
         return new positionOverrider(this.sprite);
+    }
+
+    flipX(flip = true) {
+        if ((flip && this.sprite.scale.x > 0) || (!flip && this.sprite.scale.x < 0)) {
+            this.sprite.scale.x *= -1;
+            this.sprite.anchor.x = flip ? 1 : 0;
+        }
+    }
+
+    flipY(flip = true) {
+        if ((flip && this.sprite.scale.y > 0) || (!flip && this.sprite.scale.y < 0)) {
+            this.sprite.scale.y *= -1;
+            this.sprite.anchor.y = flip ? 1 : 0;
+        }
     }
 }
 
