@@ -71,8 +71,8 @@ export class Camera {
         // ARE NOT MOVING THE SCREEN!
         const f = {
             p1: {
-                x: Math.min(0, -this.x + (this.width / 2) - (focusW / 2)),
-                y: Math.min(0, -this.y + (this.height / 2) - (focusH / 2)),
+                x: -this.x + (this.width / 2) - (focusW / 2),
+                y: -this.y + (this.height / 2) - (focusH / 2),
             },
             p2: {
                 // x: Math.min(-this.x + (this.game.width / 2) + (focusW / 2), -this.game.width),
@@ -94,6 +94,8 @@ export class Camera {
             if (pt.x > f.p2.x) {
                 this.x -= (pt.x - f.p2.x) * this.lerp;
             }
+            this.x = Math.min(this.x, 0);
+            this.x = Math.max(this.x, -this.game.width);
         }
 
         if (ydiff) {
@@ -105,6 +107,8 @@ export class Camera {
             if (pt.y > f.p2.y) {
                 this.y -= (pt.y - f.p2.y) * this.lerp;
             }
+            this.y = Math.min(this.y, 0);
+            this.y = Math.max(this.y, -this.game.height);
         }
 
         if (!xdiff && !ydiff) {
