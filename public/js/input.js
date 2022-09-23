@@ -77,9 +77,13 @@ registerSecret("FEEDMELOGS", () => console.log("OM NOM NOM"));
 export const ActionKeyMap = {
     "w": "up",
     " ": "up",
+    "arrowup": "up",
     "a": "left",
+    "arrowleft": "left",
     "s": "down",
+    "arrowdown": "down",
     "d": "right",
+    "arrowright": "right",
     "j": "action1",
     "k": "action2",
 };
@@ -115,6 +119,10 @@ export const Keyboard = {
     "y": false,
     "z": false,
     " ": false,
+    "arrowup": false,
+    "arrowdown": false,
+    "arrowleft": false,
+    "arrowright": false,
     active: false,
 };
 
