@@ -47,6 +47,8 @@ export class Engine {
         entity.velocity.y += (entity.acceleration.y + accel.y) * deltaTime;
         entity.position.x += entity.velocity.x * deltaTime;
         entity.position.y += entity.velocity.y * deltaTime;
+        entity.position.x = clamp(entity.position.x, 0, this.map.width);
+        entity.position.y = clamp(entity.position.y, 0, this.map.height);
         // TODO: write collision logic here.
         // TOOD: remove isGrounded logic, since we'd already be checking entity
         // collision with the ground.
@@ -84,3 +86,6 @@ export class Engine {
 }
 Engine.gravity = 0.050;
 Engine.frictionCoef = -0.150;
+function clamp(n, lo, hi) {
+    return Math.min(Math.max(n, lo), hi);
+}

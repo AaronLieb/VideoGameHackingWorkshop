@@ -1,8 +1,10 @@
+// Credits to @JustinStitt for the camera lerp code.
+
 export class Camera {
     // focusBounds? are the percentage that determines how big the focus box is
     // relative to the screen box.
     focusBoundsW = 0.70;
-    focusBoundsH = 0.90;
+    focusBoundsH = 0.80;
     lerp = 0.45;
 
     #focusTo;
@@ -26,19 +28,27 @@ export class Camera {
     }
 
     get x() {
-        return this.game.gameX(this.stage.x);
+        return this.gameX(this.stage.x);
     }
 
     set x(x) {
-        this.stage.x = this.game.pixiX(x);
+        this.stage.x = this.pixiX(x);
     }
 
     get y() {
-        return this.game.gameY(this.stage.y);
+        return this.gameY(this.stage.y);
     }
 
     set y(y) {
-        this.stage.y = this.game.pixiY(y);
+        this.stage.y = this.pixiY(y);
+    }
+
+    get width() {
+        return this.gameX(this.screen.width);
+    }
+
+    get height() {
+        return this.gameY(this.screen.height);
     }
 
     // focus moves the camera so that position is visible on stage. Note that
@@ -49,26 +59,33 @@ export class Camera {
     }
 
     #update() {
-        if (!this.#focusTo) {
+        const pt = this.#focusTo;
+        if (!pt) {
             return;
         }
 
-        const focusW = this.focusBoundsW * this.game.width;
-        const focusH = this.focusBoundsH * this.game.height;
+        const focusW = this.focusBoundsW * this.width;
+        const focusH = this.focusBoundsH * this.height;
 
-        const pt = this.#focusTo;
+        // NOTE that we're shifting the whole stage to control the camera. WE
+        // ARE NOT MOVING THE SCREEN!
         const f = {
             p1: {
-                x: -this.x + (this.game.width / 2) - (focusW / 2),
-                y: -this.y + (this.game.height / 2) - (focusH / 2),
+                x: Math.min(0, -this.x + (this.width / 2) - (focusW / 2)),
+                y: Math.min(0, -this.y + (this.height / 2) - (focusH / 2)),
             },
             p2: {
-                x: -this.x + (this.game.width / 2) + (focusW / 2),
-                y: -this.y + (this.game.height / 2) + (focusH / 2),
+                // x: Math.min(-this.x + (this.game.width / 2) + (focusW / 2), -this.game.width),
+                // y: Math.max(-this.y + (this.game.height / 2) + (focusH / 2), -this.game.height),
+                x: -this.x + (this.width / 2) + (focusW / 2),
+                y: -this.y + (this.height / 2) + (focusH / 2),
             },
         };
 
-        if (f.p1.x > pt.x || pt.x > f.p2.x) {
+        const xdiff = f.p1.x > pt.x || pt.x > f.p2.x;
+        const ydiff = f.p1.y > pt.y || pt.y > f.p2.y;
+
+        if (xdiff) {
             // Point is out of bounds on the X-axis. Lerp it to the nearest
             // edge.
             if (f.p1.x > pt.x) {
@@ -79,7 +96,7 @@ export class Camera {
             }
         }
 
-        if (f.p1.y > pt.y || pt.y > f.p2.y) {
+        if (ydiff) {
             // Point is out of bounds on the Y-axis. Lerp it to the nearest
             // edge.
             if (f.p1.y > pt.y) {
@@ -88,6 +105,11 @@ export class Camera {
             if (pt.y > f.p2.y) {
                 this.y -= (pt.y - f.p2.y) * this.lerp;
             }
+        }
+
+        if (!xdiff && !ydiff) {
+            // Invalidate focusTo to free up some CPU cycles on each frame.
+            this.#focusTo = undefined;
         }
     }
 }

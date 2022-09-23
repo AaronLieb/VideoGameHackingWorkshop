@@ -32,7 +32,10 @@ export class Game extends PIXI.Application {
     #toggleFPSCallback;
     #FPSCounter;
 
-    constructor() {
+    width = 0;
+    height = 0;
+
+    constructor(width, height) {
         super({
             width: canvasSize.w,
             height: canvasSize.h,
@@ -40,6 +43,9 @@ export class Game extends PIXI.Application {
             sharedLoader: true,
             sharedTicker: false,
         });
+
+        this.width = width;
+        this.height = height;
 
         this.frameTicker = this.ticker;
         this.engineTicker = PIXI.Ticker.shared;
@@ -92,14 +98,6 @@ export class Game extends PIXI.Application {
 
     pixiY(n) {
         return n * this.stage.scale.y * BlockSize;
-    }
-
-    get width() {
-        return this.gameX(this.screen.width);
-    }
-
-    get height() {
-        return this.gameY(this.screen.height);
     }
 
     #toggleFPS() {

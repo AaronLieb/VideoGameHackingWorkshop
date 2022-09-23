@@ -10,7 +10,7 @@ export class RainingFrank extends Entity {
 
     constructor(game) {
         const pos = {
-            x: (Math.random() * (game.width - 2)) + 1,
+            x: (Math.random() * (game.camera.width - 2)) + 1,
             y: 0,
         };
         super("\x00", pos, "frank");
@@ -39,7 +39,7 @@ export class RainingFrank extends Entity {
 
         this.sprite.angle += this.angleSpeed;
 
-        if (this.position.y > this.game.height + BlockSize) {
+        if (this.position.y > this.game.camera.height + BlockSize) {
             this.gone = true;
         }
     }

@@ -56,6 +56,9 @@ export class Engine {
         entity.position.x += entity.velocity.x * deltaTime;
         entity.position.y += entity.velocity.y * deltaTime;
 
+        entity.position.x = clamp(entity.position.x, 0, this.map.width);
+        entity.position.y = clamp(entity.position.y, 0, this.map.height);
+
         // TODO: write collision logic here.
         // TOOD: remove isGrounded logic, since we'd already be checking entity
         // collision with the ground.
@@ -93,4 +96,8 @@ export class Engine {
             }
         }
     }
+}
+
+function clamp(n: number, lo: number, hi: number): number {
+    return Math.min(Math.max(n, lo), hi);
 }

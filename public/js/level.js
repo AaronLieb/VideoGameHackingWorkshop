@@ -23,7 +23,7 @@ export class Level {
 
     constructor(map) {
         this.map = map;
-        this.game = new Game();
+        this.game = new Game(map.width, map.height);
         this.entities = [];
         this.backgrounds = [];
         this.engine = new Engine(this.map, this.entities);
@@ -46,14 +46,14 @@ export class Level {
         });
 
         this.map.iterateEntities((pos, block, assetID, mods) => {
-            let sprite;
+            let entity;
             if (assetID == "player") {
-                this.player = new Player(block, pos);
-                sprite = this.player;
+                entity = new Player(block, pos);
+                this.player = entity;
             } else {
-                sprite = new Entity(block, pos, assetID, mods);
+                entity = new Entity(block, pos, assetID, mods);
             }
-            this.addEntity(sprite);
+            this.addEntity(entity);
         });
 
         this.tickCallback = (delta) => this.tick(delta);
@@ -102,9 +102,7 @@ export class Level {
     }
 
     tick(delta) {
-        for (const entity of this.entities) {
-            this.engine.tickEntity(entity, delta);
-        }
+        this.engine.tick(delta);
         this.game.camera.focus(this.player.position);
     }
 
