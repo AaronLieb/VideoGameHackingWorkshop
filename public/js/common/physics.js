@@ -84,7 +84,7 @@ export class Engine {
         }
     }
 }
-Engine.gravity = 0.050;
+Engine.gravity = 0.040;
 Engine.frictionCoef = -0.150;
 function clamp(n, lo, hi) {
     return Math.min(Math.max(n, lo), hi);

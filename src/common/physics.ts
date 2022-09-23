@@ -3,7 +3,7 @@ import { BlockType, VecEq, Vector, ZP } from "/src/common/types.ts";
 import { LevelMap } from "/src/common/map.ts";
 
 export class Engine {
-    static readonly gravity = 0.050;
+    static readonly gravity = 0.040;
     static readonly frictionCoef = -0.150;
 
     constructor(readonly map: LevelMap, readonly entities: Entity[]) {}
