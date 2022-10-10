@@ -54,7 +54,7 @@ export class Level {
         this.number = info.number;
         this.session = session;
         this.startsAt = Date.now();
-        this.physics = new physics.Engine(this.map, this.entities);
+        this.physics = new physics.Engine("server", this.map, this.player, this.entities);
         this.tickID = setInterval(() => this.tick(), TickDuration);
     }
 

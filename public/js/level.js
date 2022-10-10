@@ -26,7 +26,6 @@ export class Level {
         this.game = new Game(map.width, map.height);
         this.entities = [];
         this.backgrounds = [];
-        this.engine = new Engine(this.map, this.entities);
 
         if (this.map.metadata.backgrounds) {
             // Iterate from the bottom, which is the bottom-most layer. We keep
@@ -55,6 +54,8 @@ export class Level {
             }
             this.addEntity(entity);
         });
+
+        this.engine = new Engine("client", this.map, this.player, this.entities);
 
         this.tickCallback = (delta) => this.tick(delta);
         this.game.engineTicker.add(this.tickCallback);

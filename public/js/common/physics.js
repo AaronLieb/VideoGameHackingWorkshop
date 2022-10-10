@@ -3,12 +3,17 @@
 
 import { BlockType, VecEq, ZP } from "/public/js/common/types.js";
 export class Engine {
-    constructor(map, entities) {
+    constructor(origin, map, player, entities) {
+        this.origin = origin;
         this.map = map;
+        this.player = player;
         this.entities = entities;
     }
     tick(deltaTime = 1) {
         const updates = [];
+        for (const collision of this.detector()) {
+            this.resolver(collision);
+        }
         for (const entity of this.entities) {
             const pos = { ...entity.position }; // copy so tickEntity can mutate
             this.tickEntity(entity, deltaTime);
@@ -22,47 +27,70 @@ export class Engine {
         entity.tick(deltaTime);
         // accel is for gravity or friction accel.
         const accel = ZP();
-        let grounded = false;
-        if (!entity.floating) {
-            grounded = this.isGrounded(entity);
-            if (grounded) {
-                // As long as the entity is skidding along the ground, we want
-                // to apply friction so that the object slows down, meaning we
-                // decelerate the object.
-                //
-                // We avoid modifying entity's acceleration here, because we
-                // don't actually want to override the entity's acceleration.
-                if (entity.velocity.x != 0) {
-                    accel.x = entity.velocity.x * Engine.frictionCoef;
-                }
-                // Don't allow the object to go past the ground.
-                entity.velocity.y = 0;
-            } else {
-                // The object is airbourne. Apply acceleration downwards so that
-                // it falls to the ground.
-                accel.y = Engine.gravity;
-            }
-        }
         entity.velocity.x += (entity.acceleration.x + accel.x) * deltaTime;
         entity.velocity.y += (entity.acceleration.y + accel.y) * deltaTime;
         entity.position.x += entity.velocity.x * deltaTime;
         entity.position.y += entity.velocity.y * deltaTime;
         entity.position.x = clamp(entity.position.x, 0, this.map.width);
         entity.position.y = clamp(entity.position.y, 0, this.map.height);
-        // TODO: write collision logic here.
-        // TOOD: remove isGrounded logic, since we'd already be checking entity
-        // collision with the ground.
     }
-    isGrounded(entity) {
-        const lEdge = this.positionIsGround({
-            x: Math.floor(entity.position.x) + 0,
-            y: Math.floor(entity.position.y) + 1,
+    resolver(body1, body2) {
+        // only move entities trying to get into blocked areas (edges)
+        // if an entity somehow makes it inside a blocked area, let them move freely
+    }
+    detector() {
+        return (this.origin == "server") ? this.serverDetector() : this.clientDetector();
+    }
+    serverDetector() {
+        const bodies = [];
+        this.entities.forEach((e) => bodies.push(e));
+        //TODO: Make this look for all surroundingBlocks near each entity, only unique blocks
+        this.surroundingBlocks(this.player.position).forEach((e) => bodies.push(e));
+        return this.getCollisionPairs(bodies, (body1, body2) => {
+            return body1.block != "P" && body2.block == "P";
         });
-        const rEdge = this.positionIsGround({
-            x: Math.floor(entity.position.x) + 1,
-            y: Math.floor(entity.position.y) + 1,
+    }
+    clientDetector() {
+        const bodies = [];
+        bodies.push(this.player);
+        this.entities.forEach((e) => bodies.push(e));
+        this.surroundingBlocks(this.player.position).forEach((e) => bodies.push(e));
+        return this.getCollisionPairs(bodies, (body1, body2) => {
+            return body1.block == "P" || body2.block == "P";
         });
-        return lEdge || rEdge;
+    }
+    getCollisionPairs(physicsBodies, condition) {
+        const intersectingBodies = [];
+        for (const i in physicsBodies) {
+            for (const j in physicsBodies) {
+                if (i == j) {
+                    continue;
+                }
+                const body1 = physicsBodies[i];
+                const body2 = physicsBodies[j];
+                if (condition(body1, body2) && intersection(body1, body2)) {
+                    intersectingBodies.push([body1, body2]);
+                }
+            }
+        }
+        return intersectingBodies;
+    }
+    surroundingBlocks(pos) {
+        const blocks = [];
+        for (let x = Math.floor(pos.x - 1); x <= Math.ceil(pos.x + 1); x++) {
+            for (let y = Math.floor(pos.y - 1); y <= Math.ceil(pos.y + 1); y++) {
+                const block = this.map.at({ x, y });
+                if (!block) {
+                    continue;
+                }
+                const mods = this.map.blockMods(block);
+                if (mods && mods.includes("air")) {
+                    continue;
+                }
+                blocks.push({ position: { x, y }, block });
+            }
+        }
+        return blocks;
     }
     positionIsGround(pos) {
         const block = this.map.at(pos);
@@ -86,6 +114,9 @@ export class Engine {
 }
 Engine.gravity = 0.040;
 Engine.frictionCoef = -0.150;
+function intersection(body1, body2) {
+    return (Math.abs(body1.position.x - body2.position.x) < 1 && Math.abs(body1.position.y - body2.position.y) < 1);
+}
 function clamp(n, lo, hi) {
     return Math.min(Math.max(n, lo), hi);
 }
