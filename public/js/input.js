@@ -148,6 +148,8 @@ function updateKeyboard(keyName) {
     return false;
 }
 
+// TODO: Use callbacks instead of state, use state when
+// necessary by having the callback modify the state
 self.addEventListener("keydown", function (e) {
     const keyName = mapKeyName(e);
     Keyboard[keyName] = true;
