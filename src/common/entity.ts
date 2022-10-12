@@ -1,4 +1,4 @@
-import { Block, BlockModifier, Vector } from "/src/common/types.ts";
+import { Block, BlockModifier, EntityPositionData, Vector } from "/src/common/types.ts";
 
 export abstract class Entity {
     abstract readonly mods: BlockModifier[];
@@ -16,6 +16,15 @@ export abstract class Entity {
             this.isFloating = this.mods.includes("floating");
         }
         return this.isFloating;
+    }
+
+    get positionData(): EntityPositionData {
+        return {
+            initialPosition: this.initialPosition,
+            // Support the client-side entity implementation getters.
+            position: { x: this.position.x, y: this.position.y },
+            velocity: { x: this.velocity.x, y: this.velocity.y },
+        };
     }
 
     // tick is called on every engine tick. The entity should update itself.

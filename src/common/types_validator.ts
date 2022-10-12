@@ -200,6 +200,8 @@ export function validateEntityPositionData(v: any): t.EntityPositionData {
     validateVector(v.initialPosition);
     if (v.position === undefined) throw new ValidationError("missing v.position");
     validateVector(v.position);
+    if (v.velocity === undefined) throw new ValidationError("missing v.velocity");
+    validateVector(v.velocity);
 
     return v as t.EntityPositionData;
 }
@@ -223,8 +225,8 @@ export function validateCommand(v: any): t.Command {
             validateJoinCommand(v);
             break;
         }
-        case "MOVE": {
-            validateMoveCommand(v);
+        case "ENTITY_MOVE": {
+            validateEntityMoveCommand(v);
             break;
         }
         case undefined: {
@@ -248,13 +250,12 @@ export function validateJoinCommand(v: any): t.JoinCommand {
     return v as t.JoinCommand;
 }
 
-// validateMoveCommand validates the needed type constraints
-// from v and cast it to MoveCommand.
-export function validateMoveCommand(v: any): t.MoveCommand {
-    if (v.type !== "MOVE") throw new ValidationError("missing v.type");
+// validateEntityMoveCommand validates the needed type constraints
+// from v and cast it to EntityMoveCommand.
+export function validateEntityMoveCommand(v: any): t.EntityMoveCommand {
+    if (v.type !== "ENTITY_MOVE") throw new ValidationError("missing v.type");
     if (v.d === undefined) throw new ValidationError("missing v.d");
-    if (v.d.position === undefined) throw new ValidationError("missing v.d.position");
-    validateVector(v.d.position);
+    if (typeof v.d.entities !== "object") throw new ValidationError("missing v.d.entities");
 
-    return v as t.MoveCommand;
+    return v as t.EntityMoveCommand;
 }

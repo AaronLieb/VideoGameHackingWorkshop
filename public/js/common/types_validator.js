@@ -252,6 +252,10 @@ export function validateEntityPositionData(v) {
         throw new ValidationError("missing v.position");
     }
     validateVector(v.position);
+    if (v.velocity === undefined) {
+        throw new ValidationError("missing v.velocity");
+    }
+    validateVector(v.velocity);
     return v;
 }
 // validateEntityMoveEvent validates the needed type constraints
@@ -279,8 +283,8 @@ export function validateCommand(v) {
             validateJoinCommand(v);
             break;
         }
-        case "MOVE": {
-            validateMoveCommand(v);
+        case "ENTITY_MOVE": {
+            validateEntityMoveCommand(v);
             break;
         }
         case undefined: {
@@ -306,18 +310,17 @@ export function validateJoinCommand(v) {
     }
     return v;
 }
-// validateMoveCommand validates the needed type constraints
-// from v and cast it to MoveCommand.
-export function validateMoveCommand(v) {
-    if (v.type !== "MOVE") {
+// validateEntityMoveCommand validates the needed type constraints
+// from v and cast it to EntityMoveCommand.
+export function validateEntityMoveCommand(v) {
+    if (v.type !== "ENTITY_MOVE") {
         throw new ValidationError("missing v.type");
     }
     if (v.d === undefined) {
         throw new ValidationError("missing v.d");
     }
-    if (v.d.position === undefined) {
-        throw new ValidationError("missing v.d.position");
+    if (typeof v.d.entities !== "object") {
+        throw new ValidationError("missing v.d.entities");
     }
-    validateVector(v.d.position);
     return v;
 }

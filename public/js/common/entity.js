@@ -8,6 +8,14 @@ export class Entity {
         }
         return this.isFloating;
     }
+    get positionData() {
+        return {
+            initialPosition: this.initialPosition,
+            // Support the client-side entity implementation getters.
+            position: { x: this.position.x, y: this.position.y },
+            velocity: { x: this.velocity.x, y: this.velocity.y },
+        };
+    }
     // tick is called on every engine tick. The entity should update itself.
     tick(_delta) {}
 }

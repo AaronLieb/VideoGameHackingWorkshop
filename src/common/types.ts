@@ -283,6 +283,8 @@ export type EntityPositionData = {
     readonly initialPosition: Vector;
     // position is the new position of the entity.
     position: Vector;
+    // velocity is the new velocity of the entity.
+    velocity: Vector;
 };
 
 // EntityMoveEvent is an event that's sent by the server on potentially every
@@ -303,7 +305,7 @@ export type EntityMoveEvent = {
 // the server.
 export type Command =
     | JoinCommand
-    | MoveCommand
+    | EntityMoveCommand
     | { type: "_open" }
     | { type: "_close"; code: number };
 
@@ -317,20 +319,20 @@ export type JoinCommand = {
     };
 };
 
-// MoveCommand is the command to be sent on every player movement. The client
-// should send this command as often as it needs to, which could be on every
-// movement or every duration (such as 16.67ms or 60Hz). However, the server may
-// not process the movement until it ticks, which is every TickDuration defined
-// above.
+// EntityMoveCommand is the command to be sent on every client-side entity
+// movement. The client should send this command as often as it needs to, which
+// could be on every movement or every duration (such as 16.67ms or 60Hz).
+// However, the server may not process the movement until it ticks, which is
+// every TickDuration defined above.
 //
 // It is also worth noting that the client can ONLY directly control the
 // player's movement, and that will be the only entity that it can directly
 // control. Other entities are controlled by the server and will be calculated
 // appropriately. As such, there's no need for this command to describe movement
 // of any other entity than the player.
-export type MoveCommand = {
-    readonly type: "MOVE";
+export type EntityMoveCommand = {
+    readonly type: "ENTITY_MOVE";
     d: {
-        position: Vector;
+        entities: EntityPositionData[];
     };
 };

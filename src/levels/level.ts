@@ -48,6 +48,8 @@ export class Level {
     private wonAt: Millisecond | undefined;
     private tickID: number | undefined;
     private readonly startsAt: Millisecond;
+    private readonly entityMap = new Map<string, entity.Entity>();
+    private readonly unknownEntities = new Set<string>();
 
     protected constructor(info: Info, session: session.Session) {
         this.map = info.map;
@@ -74,6 +76,7 @@ export class Level {
             const ent = newFn(pos);
 
             this.entities.push(ent);
+            this.entityMap.set(vectorstr(ent.initialPosition), ent);
             entities.push(ent);
 
             if (assetID == "player") {
@@ -86,6 +89,7 @@ export class Level {
 
     protected addEntity(entity: entity.Entity) {
         this.entities.push(entity);
+        this.entityMap.set(vectorstr(entity.initialPosition), entity);
 
         const asset = this.map.blockAsset(entity.block, BlockPosition.Floating, BlockType.Entity);
         if (asset == "player") {
@@ -104,27 +108,47 @@ export class Level {
 
     handleCommand(_: ws.Server, cmd: Command) {
         switch (cmd.type) {
-            case "MOVE":
-                this.player.position = cmd.d.position;
+            case "ENTITY_MOVE":
+                for (const pos of cmd.d.entities) {
+                    const id = vectorstr(pos.initialPosition);
+                    const entity = this.entityMap.get(id);
+                    if (entity) {
+                        console.log("updating entity", id, pos);
+                        entity.position = pos.position;
+                        continue;
+                    }
+                    if (!this.unknownEntities.has(id)) {
+                        this.unknownEntities.add(id);
+                        console.log(
+                            `client ${this.session.username} sent unknown entity ${vectorstr(pos.initialPosition)}`,
+                        );
+                    }
+                }
+                console.log(this.player.position);
                 break;
         }
     }
 
     tick(deltaTime = 1) {
-        const diff = this.physics.tick(deltaTime);
-        if (diff.length > 0) {
-            const data = diff.map((entity) => ({
-                initialPosition: entity.initialPosition,
-                position: entity.position,
-            }));
+        let diff = this.physics.tick(deltaTime);
+        if (diff) {
+            // The server should not send the player entity to the client. The
+            // anti-cheat shall do that if it needs to.
+            diff = diff.filter((entity) => entity.block != "P");
 
+            const positionData = diff.map((entity) => entity.positionData);
             this.session.ws.send({
                 type: "ENTITY_MOVE",
                 d: {
                     level: this.number,
-                    entities: data,
+                    entities: positionData,
                 },
             });
         }
     }
+}
+
+// vectorstr returns a string representation of a vector.
+function vectorstr(v: Vector) {
+    return `${v.x},${v.y}`;
 }

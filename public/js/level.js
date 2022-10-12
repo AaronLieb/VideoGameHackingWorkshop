@@ -13,9 +13,10 @@ export class Level {
     engine;
     backgrounds; // Background[]
 
-    entities;
-    blocks;
-    player;
+    #entities;
+    #blocks;
+    #player;
+    #ws;
 
     // Callbacks
     tickCallback;
@@ -24,7 +25,7 @@ export class Level {
     constructor(map) {
         this.map = map;
         this.game = new Game(map.width, map.height);
-        this.entities = [];
+        this.#entities = [];
         this.backgrounds = [];
 
         if (this.map.metadata.backgrounds) {
@@ -48,7 +49,7 @@ export class Level {
             let entity;
             if (assetID == "player") {
                 entity = new Player(block, pos);
-                this.player = entity;
+                this.#player = entity;
             } else {
                 entity = new Entity(block, pos, assetID, mods);
             }
@@ -72,23 +73,29 @@ export class Level {
     }
 
     addEntity(entity) {
-        this.entities.push(entity);
+        this.#entities.push(entity);
         this.game.stage.addChild(entity.sprite);
     }
 
     removeEntity(entity) {
-        const idx = this.entities.indexOf(entity);
+        const idx = this.#entities.indexOf(entity);
         if (idx != -1) {
-            this.entities.splice(idx, 1);
+            this.#entities.splice(idx, 1);
             this.game.stage.removeChild(entity.sprite);
         }
     }
 
-    handleEvent(_ws, ev) {
+    handleEvent(ws, ev) {
         switch (ev.type) {
-            case "ENTITY_MOVE": {
+            case "_open":
+                this.#ws = ws;
+                break;
+            case "_close":
+                this.#ws = undefined;
+                break;
+            case "ENTITY_MOVE":
                 for (const update of ev.d.entities) {
-                    const entity = this.entities.find((sprite) => {
+                    const entity = this.#entities.find((sprite) => {
                         return VecEq(sprite.initialPosition, update.initialPosition);
                     });
                     if (!entity) {
@@ -98,13 +105,20 @@ export class Level {
                     entity.position = update.position;
                 }
                 break;
-            }
         }
     }
 
     tick(delta) {
-        this.engine.tick(delta);
-        this.game.camera.focus(this.player.position);
+        const diff = this.engine.tick(delta);
+        if (this.#ws && diff) {
+            const positionData = diff.map((ent) => ent.positionData);
+            this.#ws.send({
+                type: "ENTITY_MOVE",
+                d: { entities: positionData },
+            });
+        }
+
+        this.game.camera.focus(this.#player.position);
     }
 
     #spawnFrank() {

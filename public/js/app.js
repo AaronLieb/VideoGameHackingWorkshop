@@ -130,6 +130,7 @@ export class App {
             case "LEVEL_JOINED": {
                 const levelMap = new map.LevelMap(ev.d.raw, ev.d.metadata);
                 this.level = new Level(levelMap);
+                this.level.handleEvent(this.ws, { type: "_open" });
 
                 this.gameBoxComponent = new gameBox.Component(this.gameBoxElement, this.level.game, ev.d.info, {
                     quit: () => this.#leaveLevel(),
