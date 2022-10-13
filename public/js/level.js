@@ -56,7 +56,7 @@ export class Level {
             this.addEntity(entity);
         });
 
-        this.engine = new Engine("client", this.map, this.player, this.entities);
+        this.engine = new Engine("client", this.map, this.#player, this.#entities);
 
         this.tickCallback = (delta) => this.tick(delta);
         this.game.engineTicker.add(this.tickCallback);

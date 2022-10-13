@@ -2,6 +2,11 @@
 // Then move on.
 
 import { BlockType, VecEq, ZP } from "/public/js/common/types.js";
+var Origin;
+(function (Origin) {
+    Origin["client"] = "client";
+    Origin["server"] = "server";
+})(Origin || (Origin = {}));
 export class Engine {
     constructor(origin, map, player, entities) {
         this.origin = origin;
@@ -24,6 +29,9 @@ export class Engine {
         return updates;
     }
     tickEntity(entity, deltaTime = 1) {
+        if (entity.block == "P") {
+            //console.log("tickEntity", entity);
+        }
         entity.tick(deltaTime);
         // accel is for gravity or friction accel.
         const accel = ZP();
@@ -34,26 +42,58 @@ export class Engine {
         entity.position.x = clamp(entity.position.x, 0, this.map.width);
         entity.position.y = clamp(entity.position.y, 0, this.map.height);
     }
-    resolver(body1, body2) {
-        // only move entities trying to get into blocked areas (edges)
-        // if an entity somehow makes it inside a blocked area, let them move freely
+    resolver(collisionPair) {
+        const body1 = collisionPair[0];
+        const body2 = collisionPair[1];
+        console.log("Resolving collision...", body1, body2);
+        /* Involves a static body */
+        if (body1.isStatic || body2.isStatic) {
+            let staticBody;
+            let dynamicBody;
+            if (body1.isStatic) {
+                staticBody = body1;
+                dynamicBody = body2;
+            } else {
+                staticBody = body2;
+                dynamicBody = body1;
+            }
+            const diff = {
+                x: staticBody.position.x - dynamicBody.position.x,
+                y: staticBody.position.y - dynamicBody.position.y,
+            };
+            this.applyNormalForce(dynamicBody, diff);
+            /* Does not involve a static body */
+        } else {
+            const diff = {
+                x: body1.position.x - body2.position.x,
+                y: body1.position.y - body2.position.y,
+            };
+            this.applyNormalForces(body1, body2, diff);
+        }
     }
     detector() {
-        return (this.origin == "server") ? this.serverDetector() : this.clientDetector();
+        return (this.origin == Origin.server) ? this.serverDetector() : this.clientDetector();
     }
     serverDetector() {
-        const bodies = [];
-        this.entities.forEach((e) => bodies.push(e));
-        //TODO: Make this look for all surroundingBlocks near each entity, only unique blocks
-        this.surroundingBlocks(this.player.position).forEach((e) => bodies.push(e));
-        return this.getCollisionPairs(bodies, (body1, body2) => {
+        /*
+        const bodies: PhysicsBody[] = [];
+        this.entities.forEach((e: Entity) => bodies.push(e));
+        // TODO: Make this look for all surroundingBlocks near each entity, only unique blocks
+        this.surroundingBlocks(this.player.position).forEach((e: PhysicsBody) => bodies.push(e));
+        return this.getCollisionPairs(bodies, (body1: PhysicsBody, body2: PhysicsBody): boolean => {
             return body1.block != "P" && body2.block == "P";
         });
+        */
+        return [];
     }
     clientDetector() {
         const bodies = [];
         bodies.push(this.player);
-        this.entities.forEach((e) => bodies.push(e));
+        this.entities.forEach((e) => {
+            if (e.block != "P") {
+                bodies.push(e);
+            }
+        });
         this.surroundingBlocks(this.player.position).forEach((e) => bodies.push(e));
         return this.getCollisionPairs(bodies, (body1, body2) => {
             return body1.block == "P" || body2.block == "P";
@@ -80,14 +120,14 @@ export class Engine {
         for (let x = Math.floor(pos.x - 1); x <= Math.ceil(pos.x + 1); x++) {
             for (let y = Math.floor(pos.y - 1); y <= Math.ceil(pos.y + 1); y++) {
                 const block = this.map.at({ x, y });
-                if (!block) {
+                if (!block || this.map.blockType(block) != BlockType.Block) {
                     continue;
                 }
                 const mods = this.map.blockMods(block);
                 if (mods && mods.includes("air")) {
                     continue;
                 }
-                blocks.push({ position: { x, y }, block });
+                blocks.push({ position: { x, y }, block, isStatic: true });
             }
         }
         return blocks;
@@ -111,9 +151,23 @@ export class Engine {
             }
         }
     }
+    applyNormalForces(body1, body2, diff) {
+        console.log("Applying normal forces", diff);
+        body1.position.x += Math.max(diff.x * Engine.normalForceRatio / 2, Engine.minimumNormalForce);
+        body1.position.y += Math.max(diff.y * Engine.normalForceRatio / 2, Engine.minimumNormalForce);
+        body2.position.x += Math.max(-diff.x * Engine.normalForceRatio / 2, Engine.minimumNormalForce);
+        body2.position.y += Math.max(-diff.y * Engine.normalForceRatio / 2, Engine.minimumNormalForce);
+    }
+    applyNormalForce(body, diff) {
+        console.log("Applying normal force", diff);
+        body.position.x += Math.max(diff.x * Engine.normalForceRatio, Engine.minimumNormalForce);
+        body.position.y += Math.max(diff.y * Engine.normalForceRatio, Engine.minimumNormalForce);
+    }
 }
 Engine.gravity = 0.040;
 Engine.frictionCoef = -0.150;
+Engine.normalForceRatio = 1.5;
+Engine.minimumNormalForce = 0;
 function intersection(body1, body2) {
     return (Math.abs(body1.position.x - body2.position.x) < 1 && Math.abs(body1.position.y - body2.position.y) < 1);
 }

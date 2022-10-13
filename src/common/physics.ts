@@ -2,14 +2,18 @@ import { Entity } from "/src/common/entity.ts";
 import { Block, BlockType, VecEq, Vector, ZP } from "/src/common/types.ts";
 import { LevelMap } from "/src/common/map.ts";
 
-type PhysicsBlock = { position: Vector; block: Block };
-type PhysicsBody = Entity | PhysicsBlock;
+type PhysicsBody = { position: Vector; block: Block; isStatic: boolean };
 
-type Origin = "client" | "server";
+enum Origin {
+    client = "client",
+    server = "server",
+}
 
 export class Engine {
     static readonly gravity = 0.040;
     static readonly frictionCoef = -0.150;
+    static readonly normalForceRatio = 1.5;
+    static readonly minimumNormalForce = 0;
 
     constructor(
         readonly origin: Origin,
@@ -37,6 +41,9 @@ export class Engine {
     }
 
     tickEntity(entity: Entity, deltaTime = 1) {
+        if (entity.block == "P") {
+            //console.log("tickEntity", entity);
+        }
         entity.tick(deltaTime);
 
         // accel is for gravity or friction accel.
@@ -52,30 +59,65 @@ export class Engine {
         entity.position.y = clamp(entity.position.y, 0, this.map.height);
     }
 
-    public resolver(body1: PhysicsBody, body2: PhysicsBody) {
-      // only move entities trying to get into blocked areas (edges)
-      // if an entity somehow makes it inside a blocked area, let them move freely
+    public resolver(collisionPair: PhysicsBody[]) {
+        const body1 = collisionPair[0];
+        const body2 = collisionPair[1];
+        console.log("Resolving collision...", body1, body2);
+
+        /* Involves a static body */
+        if (body1.isStatic || body2.isStatic) {
+            let staticBody: PhysicsBody;
+            let dynamicBody: PhysicsBody;
+            if (body1.isStatic) {
+                staticBody = body1;
+                dynamicBody = body2;
+            } else {
+                staticBody = body2;
+                dynamicBody = body1;
+            }
+
+            const diff = {
+                x: staticBody.position.x - dynamicBody.position.x,
+                y: staticBody.position.y - dynamicBody.position.y,
+            };
+
+            this.applyNormalForce(dynamicBody, diff);
+
+            /* Does not involve a static body */
+        } else {
+            const diff = {
+                x: body1.position.x - body2.position.x,
+                y: body1.position.y - body2.position.y,
+            };
+
+            this.applyNormalForces(body1, body2, diff);
+        }
     }
 
     public detector(): PhysicsBody[][] {
-        return (this.origin == "server") ? this.serverDetector() : this.clientDetector();
+        return (this.origin == Origin.server) ? this.serverDetector() : this.clientDetector();
     }
 
     private serverDetector(): PhysicsBody[][] {
+        /*
         const bodies: PhysicsBody[] = [];
         this.entities.forEach((e: Entity) => bodies.push(e));
-        //TODO: Make this look for all surroundingBlocks near each entity, only unique blocks
-        this.surroundingBlocks(this.player.position).forEach((e: PhysicsBlock) => bodies.push(e));
+        // TODO: Make this look for all surroundingBlocks near each entity, only unique blocks
+        this.surroundingBlocks(this.player.position).forEach((e: PhysicsBody) => bodies.push(e));
         return this.getCollisionPairs(bodies, (body1: PhysicsBody, body2: PhysicsBody): boolean => {
             return body1.block != "P" && body2.block == "P";
         });
+        */
+        return [];
     }
 
     private clientDetector(): PhysicsBody[][] {
         const bodies: PhysicsBody[] = [];
         bodies.push(this.player);
-        this.entities.forEach((e: Entity) => bodies.push(e));
-        this.surroundingBlocks(this.player.position).forEach((e: PhysicsBlock) => bodies.push(e));
+        this.entities.forEach((e: Entity) => {
+            if (e.block != "P") bodies.push(e);
+        });
+        this.surroundingBlocks(this.player.position).forEach((e: PhysicsBody) => bodies.push(e));
         return this.getCollisionPairs(bodies, (body1: PhysicsBody, body2: PhysicsBody): boolean => {
             return body1.block == "P" || body2.block == "P";
         });
@@ -94,13 +136,13 @@ export class Engine {
         return intersectingBodies;
     }
 
-    private surroundingBlocks(pos: Vector): PhysicsBlock[] {
-        const blocks: PhysicsBlock[] = [];
+    private surroundingBlocks(pos: Vector): PhysicsBody[] {
+        const blocks: PhysicsBody[] = [];
 
         for (let x = Math.floor(pos.x - 1); x <= Math.ceil(pos.x + 1); x++) {
             for (let y = Math.floor(pos.y - 1); y <= Math.ceil(pos.y + 1); y++) {
                 const block = this.map.at({ x, y });
-                if (!block) {
+                if (!block || this.map.blockType(block) != BlockType.Block) {
                     continue;
                 }
 
@@ -109,7 +151,7 @@ export class Engine {
                     continue;
                 }
 
-                blocks.push({ position: { x, y }, block });
+                blocks.push({ position: { x, y }, block, isStatic: true });
             }
         }
 
@@ -135,6 +177,21 @@ export class Engine {
                 return false;
             }
         }
+    }
+
+    private applyNormalForces(body1: PhysicsBody, body2: PhysicsBody, diff: Vector) {
+        console.log("Applying normal forces", diff);
+        body1.position.x += Math.max(diff.x * Engine.normalForceRatio / 2, Engine.minimumNormalForce);
+        body1.position.y += Math.max(diff.y * Engine.normalForceRatio / 2, Engine.minimumNormalForce);
+
+        body2.position.x += Math.max(-diff.x * Engine.normalForceRatio / 2, Engine.minimumNormalForce);
+        body2.position.y += Math.max(-diff.y * Engine.normalForceRatio / 2, Engine.minimumNormalForce);
+    }
+
+    private applyNormalForce(body: PhysicsBody, diff: Vector) {
+        console.log("Applying normal force", diff);
+        body.position.x += Math.max(diff.x * Engine.normalForceRatio, Engine.minimumNormalForce);
+        body.position.y += Math.max(diff.y * Engine.normalForceRatio, Engine.minimumNormalForce);
     }
 }
 

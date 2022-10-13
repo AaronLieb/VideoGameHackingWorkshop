@@ -4,6 +4,7 @@ export abstract class Entity {
     abstract readonly mods: BlockModifier[];
     abstract readonly block: Block;
     abstract readonly initialPosition: Vector;
+    abstract readonly isStatic: boolean;
 
     abstract position: Vector;
     abstract velocity: Vector;
