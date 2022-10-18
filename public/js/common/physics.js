@@ -72,15 +72,16 @@ export class Engine {
             };
             diff.x -= Math.sign(diff.x);
             diff.y -= Math.sign(diff.y);
-            dynamicBody.velocity.x *= Engine.frictionCoef;
-            dynamicBody.velocity.y *= Engine.frictionCoef;
-            this.applyNormalForce(dynamicBody, diff);
+            const surfaces = this.blockSurfaces(staticBody);
+            this.applyNormalForce(dynamicBody, diff, surfaces);
             /* Does not involve a static body */
         } else {
             const diff = {
                 x: body1.position.x - body2.position.x,
                 y: body1.position.y - body2.position.y,
             };
+            diff.x -= Math.sign(diff.x);
+            diff.y -= Math.sign(diff.y);
             this.applyNormalForces(body1, body2, diff);
         }
     }
@@ -107,10 +108,16 @@ export class Engine {
                 bodies.push(e);
             }
         });
+        // TODO: Fix this, not all are static
         bodies.forEach((b) => {
             b.isStatic = false;
         });
-        this.surroundingBlocks(this.player.position).forEach((e) => bodies.push(e));
+        for (const block of this.surroundingBlocks(this.player.position)) {
+            if (intersection(block, this.player)) {
+                bodies.push(block);
+                //break;
+            }
+        }
         return this.getCollisionPairs(bodies, (body1, body2) => {
             return body1.block == "P" || body2.block == "P";
         });
@@ -144,6 +151,23 @@ export class Engine {
             }
         }
         return blocks;
+    }
+    blockSurfaces(block) {
+        const result = [1, 1, 1, 1];
+        let { x, y } = block.position;
+        if (this.isSolidBlock(this.map.at({ x: x, y: y - 1 }))) {
+            result[0] = 0;
+        }
+        if (this.isSolidBlock(this.map.at({ x: x + 1, y: y }))) {
+            result[1] = 0;
+        }
+        if (this.isSolidBlock(this.map.at({ x: x, y: y - 1 }))) {
+            result[2] = 0;
+        }
+        if (this.isSolidBlock(this.map.at({ x: x - 1, y: y }))) {
+            result[3] = 0;
+        }
+        return result;
     }
     isGrounded(body) {
         const x_dec = getDecimal(body.position.x);
@@ -197,16 +221,40 @@ export class Engine {
         return false;
     }
     applyNormalForces(body1, body2, diff) {
-        body1.position.x += Math.max(diff.x * Engine.normalForceRatio / 2, Engine.minimumNormalForce);
-        body1.position.y += Math.max(diff.y * Engine.normalForceRatio / 2, Engine.minimumNormalForce);
-        body2.position.x += Math.max(-diff.x * Engine.normalForceRatio / 2, Engine.minimumNormalForce);
-        body2.position.y += Math.max(-diff.y * Engine.normalForceRatio / 2, Engine.minimumNormalForce);
+        const x_normal = minimumForce(diff.x * Engine.normalForceRatio / 2, Engine.minimumNormalForce);
+        const y_normal = minimumForce(diff.y * Engine.normalForceRatio / 2, Engine.minimumNormalForce);
+        body1.position.x += -x_normal;
+        body1.position.y += -y_normal;
+        body2.position.x += x_normal;
+        body2.position.y += y_normal;
     }
-    applyNormalForce(body, diff) {
-        const x_normal = minimumForce(diff.x * Engine.normalForceRatio, Engine.minimumNormalForce);
-        //body.position.x += x_normal;
-        const y_normal = minimumForce(diff.y * Engine.normalForceRatio, Engine.minimumNormalForce);
+    applyNormalForce(body, diff, surfaces = [1, 1, 1, 1]) {
+        let x_normal = minimumForce(diff.x * Engine.normalForceRatio, Engine.minimumNormalForce);
+        let y_normal = minimumForce(diff.y * Engine.normalForceRatio, Engine.minimumNormalForce);
+        if (y_normal < 0) {
+            y_normal *= surfaces[0];
+        }
+        if (x_normal > 0) {
+            x_normal *= surfaces[1];
+        }
+        if (y_normal > 0) {
+            y_normal *= surfaces[2];
+        }
+        if (x_normal < 0) {
+            x_normal *= surfaces[3];
+        }
+        body.position.x += x_normal;
         body.position.y += y_normal;
+    }
+    isSolidBlock(block) {
+        if (!block || this.map.blockType(block) != BlockType.Block) {
+            return false;
+        }
+        const mods = this.map.blockMods(block);
+        if (mods && mods.includes("air")) {
+            return false;
+        }
+        return true;
     }
 }
 Engine.gravity = 0.025;
