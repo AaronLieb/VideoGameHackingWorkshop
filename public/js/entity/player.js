@@ -16,7 +16,7 @@ export class Player extends Entity {
     static walkAccel = 0.035;
 
     static jumpHeight = 0.45;
-    static jumpAccel = 0.10;
+    static jumpAccel = 0.5;
 
     static spriteCycleDelay = 6;
     #spriteDelay = 0;
@@ -45,17 +45,12 @@ export class Player extends Entity {
     }
 
     #handleMove() {
-        // TODO: use a proper jump curve
         if (input.ActionKeys.up) {
             // When I go up, the velocity is actually negative, because the
             // origin is at the top-left corner.
-            if (this.velocity.y > -Player.jumpHeight) {
-                this.acceleration.y = -Player.jumpAccel;
-            } else {
-                this.acceleration.y = 0;
-            }
-        } else {
-            this.acceleration.y = 0;
+            this.velocity.y = -Player.jumpAccel;
+            // change this later, just for testing
+            input.ActionKeys.up = false;
         }
 
         switch (true) {

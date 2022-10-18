@@ -113,7 +113,6 @@ export class Level {
                     const id = vectorstr(pos.initialPosition);
                     const entity = this.entityMap.get(id);
                     if (entity) {
-                        console.log("updating entity", id, pos);
                         entity.position = pos.position;
                         continue;
                     }
@@ -124,7 +123,6 @@ export class Level {
                         );
                     }
                 }
-                console.log(this.player.position);
                 break;
         }
     }

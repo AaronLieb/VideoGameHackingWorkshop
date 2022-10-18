@@ -10,10 +10,12 @@ enum Origin {
 }
 
 export class Engine {
-    static readonly gravity = 0.040;
-    static readonly frictionCoef = -0.150;
-    static readonly normalForceRatio = 1.5;
+    static readonly gravity = 0.025;
+    static readonly frictionCoef = 0.85;
+    static readonly airFrictionCoef = 0.95;
+    static readonly normalForceRatio = 1;
     static readonly minimumNormalForce = 0;
+    static readonly maxSpeed = 0.5;
 
     constructor(
         readonly origin: Origin,
@@ -25,10 +27,6 @@ export class Engine {
     tick(deltaTime = 1): Entity[] {
         const updates = [];
 
-        for (const collision of this.detector()) {
-            this.resolver(collision);
-        }
-
         for (const entity of this.entities) {
             const pos = { ...entity.position }; // copy so tickEntity can mutate
             this.tickEntity(entity, deltaTime);
@@ -37,20 +35,31 @@ export class Engine {
             }
         }
 
+        const collisions = this.detector();
+        for (const collision of collisions) {
+            this.resolver(collision);
+        }
+
         return updates;
     }
 
     tickEntity(entity: Entity, deltaTime = 1) {
-        if (entity.block == "P") {
-            //console.log("tickEntity", entity);
-        }
         entity.tick(deltaTime);
 
         // accel is for gravity or friction accel.
         const accel = ZP();
+        accel.y = this.isGrounded(entity) ? 0 : Engine.gravity;
 
+        const isTouchingBlock = this.isTouchingBlock(entity);
+
+        entity.velocity.x *= isTouchingBlock ? Engine.frictionCoef : Engine.airFrictionCoef;
         entity.velocity.x += (entity.acceleration.x + accel.x) * deltaTime;
+        entity.velocity.x = Math.min(entity.velocity.x, Engine.maxSpeed);
+        if (Math.abs(entity.velocity.x) < 0.001) entity.velocity.x = 0;
+        entity.velocity.y *= isTouchingBlock ? Engine.frictionCoef : Engine.airFrictionCoef;
         entity.velocity.y += (entity.acceleration.y + accel.y) * deltaTime;
+        entity.velocity.y = Math.min(entity.velocity.y, Engine.maxSpeed);
+        if (Math.abs(entity.velocity.y) < 0.001) entity.velocity.y = 0;
 
         entity.position.x += entity.velocity.x * deltaTime;
         entity.position.y += entity.velocity.y * deltaTime;
@@ -62,7 +71,6 @@ export class Engine {
     public resolver(collisionPair: PhysicsBody[]) {
         const body1 = collisionPair[0];
         const body2 = collisionPair[1];
-        console.log("Resolving collision...", body1, body2);
 
         /* Involves a static body */
         if (body1.isStatic || body2.isStatic) {
@@ -80,6 +88,12 @@ export class Engine {
                 x: staticBody.position.x - dynamicBody.position.x,
                 y: staticBody.position.y - dynamicBody.position.y,
             };
+
+            diff.x -= Math.sign(diff.x);
+            diff.y -= Math.sign(diff.y);
+
+            (dynamicBody as Entity).velocity.x *= Engine.frictionCoef;
+            (dynamicBody as Entity).velocity.y *= Engine.frictionCoef;
 
             this.applyNormalForce(dynamicBody, diff);
 
@@ -117,6 +131,9 @@ export class Engine {
         this.entities.forEach((e: Entity) => {
             if (e.block != "P") bodies.push(e);
         });
+        bodies.forEach((b: PhysicsBody) => {
+            b.isStatic = false;
+        });
         this.surroundingBlocks(this.player.position).forEach((e: PhysicsBody) => bodies.push(e));
         return this.getCollisionPairs(bodies, (body1: PhysicsBody, body2: PhysicsBody): boolean => {
             return body1.block == "P" || body2.block == "P";
@@ -125,9 +142,8 @@ export class Engine {
 
     private getCollisionPairs(physicsBodies: PhysicsBody[], condition: (b1: PhysicsBody, b2: PhysicsBody) => boolean) {
         const intersectingBodies: PhysicsBody[][] = [];
-        for (const i in physicsBodies) {
-            for (const j in physicsBodies) {
-                if (i == j) continue;
+        for (let i = 0; i < physicsBodies.length; i++) {
+            for (let j = i + 1; j < physicsBodies.length; j++) {
                 const body1 = physicsBodies[i];
                 const body2 = physicsBodies[j];
                 if (condition(body1, body2) && intersection(body1, body2)) intersectingBodies.push([body1, body2]);
@@ -154,33 +170,55 @@ export class Engine {
                 blocks.push({ position: { x, y }, block, isStatic: true });
             }
         }
-
         return blocks;
     }
 
-    private positionIsGround(pos: Vector): boolean {
-        const block = this.map.at(pos);
-        if (!block) {
-            return false;
+    private isGrounded(body: PhysicsBody): boolean {
+        const x_dec = getDecimal(body.position.x);
+        const y_dec = getDecimal(body.position.y);
+        let x_offset = 0;
+        let y_offset = 0;
+        if (y_dec < 0.95 && y_dec > 0.05) return false;
+        if (x_dec >= 0.98) x_offset = 1;
+        if (x_dec <= 0.02) x_offset = -1;
+        if (y_dec >= 0.95) y_offset = -1;
+        if (y_dec <= 0.05) y_offset = 1;
+
+        const leftBlock = this.map.at({
+            x: Math.floor(body.position.x) + x_offset,
+            y: Math.floor(body.position.y) + y_offset + 1,
+        });
+
+        const rightBlock = this.map.at({
+            x: Math.ceil(body.position.x) + x_offset,
+            y: Math.floor(body.position.y) + y_offset + 1,
+        });
+
+        if (x_offset == 0 && rightBlock && this.map.blockType(rightBlock) == BlockType.Block) {
+            const rightMods = this.map.blockMods(rightBlock);
+            if (!(rightMods && rightMods.includes("air"))) {
+                return true;
+            }
         }
 
-        const btype = this.map.blockType(block);
-        switch (btype) {
-            case BlockType.Block: {
-                const mods = this.map.blockMods(block);
-                return !mods.includes("air");
-            }
-            case BlockType.Entity: {
-                return this.entities.find((entity) => VecEq(entity.position, pos)) !== undefined;
-            }
-            default: {
-                return false;
+        if (leftBlock && this.map.blockType(leftBlock) == BlockType.Block) {
+            const leftMods = this.map.blockMods(leftBlock);
+            if (!(leftMods && leftMods.includes("air"))) {
+                return true;
             }
         }
+        return false;
+    }
+
+    private isTouchingBlock(body: PhysicsBody): boolean {
+        const blocks = this.surroundingBlocks(body.position);
+        for (const block of blocks) {
+            if (intersection(body, block, 1.1)) return true;
+        }
+        return false;
     }
 
     private applyNormalForces(body1: PhysicsBody, body2: PhysicsBody, diff: Vector) {
-        console.log("Applying normal forces", diff);
         body1.position.x += Math.max(diff.x * Engine.normalForceRatio / 2, Engine.minimumNormalForce);
         body1.position.y += Math.max(diff.y * Engine.normalForceRatio / 2, Engine.minimumNormalForce);
 
@@ -189,14 +227,24 @@ export class Engine {
     }
 
     private applyNormalForce(body: PhysicsBody, diff: Vector) {
-        console.log("Applying normal force", diff);
-        body.position.x += Math.max(diff.x * Engine.normalForceRatio, Engine.minimumNormalForce);
-        body.position.y += Math.max(diff.y * Engine.normalForceRatio, Engine.minimumNormalForce);
+        const x_normal = minimumForce(diff.x * Engine.normalForceRatio, Engine.minimumNormalForce);
+        //body.position.x += x_normal;
+        const y_normal = minimumForce(diff.y * Engine.normalForceRatio, Engine.minimumNormalForce);
+        body.position.y += y_normal;
     }
 }
 
-function intersection(body1: PhysicsBody, body2: PhysicsBody): boolean {
-    return (Math.abs(body1.position.x - body2.position.x) < 1 && Math.abs(body1.position.y - body2.position.y) < 1);
+function getDecimal(x: number) {
+    return x - Math.floor(x);
+}
+
+function minimumForce(force: number, absMin: number) {
+    if (Math.abs(force) > absMin) return force;
+    return absMin * Math.sign(force);
+}
+
+function intersection(body1: PhysicsBody, body2: PhysicsBody, d: number = 1): boolean {
+    return (Math.abs(body1.position.x - body2.position.x) < d && Math.abs(body1.position.y - body2.position.y) < d);
 }
 
 function clamp(n: number, lo: number, hi: number): number {
