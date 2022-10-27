@@ -129,10 +129,8 @@ export class Level {
 
     tick(deltaTime = 1) {
         let diff = this.physics.tick(deltaTime);
-        if (diff) {
-            // The server should not send the player entity to the client. The
-            // anti-cheat shall do that if it needs to.
-            diff = diff.filter((entity) => entity.block != "P");
+        if (diff.length > 0) {
+            console.log("diff: ", diff);
 
             const positionData = diff.map((entity) => entity.positionData);
             this.session.ws.send({

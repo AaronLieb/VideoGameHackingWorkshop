@@ -21,7 +21,9 @@ export class Engine {
             const pos = { ...entity.position }; // copy so tickEntity can mutate
             this.tickEntity(entity, deltaTime);
             if (pos.x != entity.position.x || pos.y != entity.position.y) {
-                entity.updated = true;
+                if (this.origin != Origin.server || entity.block != "P") {
+                    entity.updated = true;
+                }
             }
         }
         for (const collision of this.detector()) {
