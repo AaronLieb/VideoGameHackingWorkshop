@@ -6,6 +6,7 @@ export abstract class Entity {
     abstract readonly initialPosition: Vector;
     abstract readonly isStatic: boolean;
 
+    abstract updated: boolean;
     abstract position: Vector;
     abstract velocity: Vector;
     abstract acceleration: Vector;

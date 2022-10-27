@@ -17,15 +17,22 @@ export class Engine {
     tick(deltaTime = 1) {
         const updates = [];
         for (const entity of this.entities) {
+            entity.updated = false;
             const pos = { ...entity.position }; // copy so tickEntity can mutate
             this.tickEntity(entity, deltaTime);
             if (pos.x != entity.position.x || pos.y != entity.position.y) {
-                updates.push(entity);
+                entity.updated = true;
             }
         }
-        const collisions = this.detector();
-        for (const collision of collisions) {
+        for (const collision of this.detector()) {
             this.resolver(collision);
+            collision[0].updated = true;
+            collision[1].updated = true;
+        }
+        for (const e of this.entities) {
+            if (e.updated) {
+                updates.push(e);
+            }
         }
         return updates;
     }
@@ -34,19 +41,15 @@ export class Engine {
         // accel is for gravity or friction accel.
         const accel = ZP();
         accel.y = this.isGrounded(entity) ? 0 : Engine.gravity;
-        const isTouchingBlock = this.isTouchingBlock(entity);
-        entity.velocity.x *= isTouchingBlock ? Engine.frictionCoef : Engine.airFrictionCoef;
+        const friction = this.isTouchingBlock(entity) ? Engine.frictionCoef : Engine.airFrictionCoef;
+        entity.velocity.x *= Math.pow(friction, deltaTime);
         entity.velocity.x += (entity.acceleration.x + accel.x) * deltaTime;
-        entity.velocity.x = Math.min(entity.velocity.x, Engine.maxSpeed);
-        if (Math.abs(entity.velocity.x) < 0.001) {
-            entity.velocity.x = 0;
-        }
-        entity.velocity.y *= isTouchingBlock ? Engine.frictionCoef : Engine.airFrictionCoef;
+        entity.velocity.x = absMin(entity.velocity.x, Engine.maxSpeed);
+        entity.velocity.x = roundToZero(entity.velocity.x);
+        entity.velocity.y *= Math.pow(friction, deltaTime);
         entity.velocity.y += (entity.acceleration.y + accel.y) * deltaTime;
-        entity.velocity.y = Math.min(entity.velocity.y, Engine.maxSpeed);
-        if (Math.abs(entity.velocity.y) < 0.001) {
-            entity.velocity.y = 0;
-        }
+        entity.velocity.y = absMin(entity.velocity.y, Engine.maxSpeed);
+        entity.velocity.y = roundToZero(entity.velocity.y);
         entity.position.x += entity.velocity.x * deltaTime;
         entity.position.y += entity.velocity.y * deltaTime;
         entity.position.x = clamp(entity.position.x, 0, this.map.width);
@@ -98,7 +101,20 @@ export class Engine {
             return body1.block != "P" && body2.block == "P";
         });
         */
-        return [];
+        const bodies = new Set();
+        this.entities.forEach((e) => {
+            if (e.block != "P") {
+                bodies.add(e);
+                for (const block of this.surroundingBlocks(e.position)) {
+                    if (intersection(block, e)) {
+                        bodies.add(block);
+                    }
+                }
+            }
+        });
+        return this.getCollisionPairs(Array.from(bodies), (body1, body2) => {
+            return body1.block != "P" && body2.block != "P";
+        });
     }
     clientDetector() {
         const bodies = [];
@@ -107,10 +123,6 @@ export class Engine {
             if (e.block != "P") {
                 bodies.push(e);
             }
-        });
-        // TODO: Fix this, not all are static
-        bodies.forEach((b) => {
-            b.isStatic = false;
         });
         for (const block of this.surroundingBlocks(this.player.position)) {
             if (intersection(block, this.player)) {
@@ -221,16 +233,16 @@ export class Engine {
         return false;
     }
     applyNormalForces(body1, body2, diff) {
-        const x_normal = minimumForce(diff.x * Engine.normalForceRatio / 2, Engine.minimumNormalForce);
-        const y_normal = minimumForce(diff.y * Engine.normalForceRatio / 2, Engine.minimumNormalForce);
+        const x_normal = absMax(diff.x * Engine.normalForceRatio / 2, Engine.minimumNormalForce);
+        const y_normal = absMax(diff.y * Engine.normalForceRatio / 2, Engine.minimumNormalForce);
         body1.position.x += -x_normal;
         body1.position.y += -y_normal;
         body2.position.x += x_normal;
         body2.position.y += y_normal;
     }
     applyNormalForce(body, diff, surfaces = [1, 1, 1, 1]) {
-        let x_normal = minimumForce(diff.x * Engine.normalForceRatio, Engine.minimumNormalForce);
-        let y_normal = minimumForce(diff.y * Engine.normalForceRatio, Engine.minimumNormalForce);
+        let x_normal = absMax(diff.x * Engine.normalForceRatio, Engine.minimumNormalForce);
+        let y_normal = absMax(diff.y * Engine.normalForceRatio, Engine.minimumNormalForce);
         if (y_normal < 0) {
             y_normal *= surfaces[0];
         }
@@ -266,11 +278,25 @@ Engine.maxSpeed = 0.5;
 function getDecimal(x) {
     return x - Math.floor(x);
 }
-function minimumForce(force, absMin) {
-    if (Math.abs(force) > absMin) {
+function absMax(force, max) {
+    const absMax = Math.abs(max);
+    if (Math.abs(force) > absMax) {
+        return force;
+    }
+    return absMax * Math.sign(force);
+}
+function absMin(force, min) {
+    const absMin = Math.abs(min);
+    if (Math.abs(force) < absMin) {
         return force;
     }
     return absMin * Math.sign(force);
+}
+function roundToZero(x, threshold = 0.001) {
+    if (Math.abs(x) < threshold) {
+        return 0;
+    }
+    return x;
 }
 function intersection(body1, body2, d = 1) {
     return (Math.abs(body1.position.x - body2.position.x) < d && Math.abs(body1.position.y - body2.position.y) < d);
